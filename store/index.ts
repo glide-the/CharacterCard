@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { GameState, Phase, Character, RuleCard, StoryNode, ServiceProvider, OpenAIConfig, TriggeredRule } from "../types";
+import { GameState, Phase, Character, RuleCard, StoryNode, ServiceProvider, OpenAIConfig, TriggeredRule, DecisionRecord } from "../types";
 import { INITIAL_RULES, INTRO_STORY } from "../constants";
 
 const localStorageStorage = createJSONStorage(() => localStorage);
@@ -21,6 +21,7 @@ export interface GameStoreActions {
   setRules: (rules: RuleCard[] | ((prev: RuleCard[]) => RuleCard[])) => void;
   setStoryLog: (storyLog: StoryNode[] | ((prev: StoryNode[]) => StoryNode[])) => void;
   setCurrentStory: (story: StoryNode | null) => void;
+  setDecisionHistory: (history: DecisionRecord[] | ((prev: DecisionRecord[]) => DecisionRecord[])) => void;
   setRealityStats: (stats: GameState['realityStats'] | ((prev: GameState['realityStats']) => GameState['realityStats'])) => void;
   setTurnCount: (count: number) => void;
   setMaxTurns: (count: number) => void;
@@ -43,6 +44,7 @@ const initialState: GameStoreState = {
   rules: INITIAL_RULES,
   storyLog: [],
   currentStory: null,
+  decisionHistory: [],
   realityStats: { credibility: 5, stress: 2, connections: 3 },
   turnCount: 0,
   maxTurns: 10,
@@ -80,6 +82,11 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
         })),
       
       setCurrentStory: (story) => set({ currentStory: story }),
+
+      setDecisionHistory: (history) =>
+        set((state) => ({
+          decisionHistory: typeof history === 'function' ? history(state.decisionHistory) : history
+        })),
       
       setRealityStats: (stats) =>
         set((state) => ({
@@ -108,6 +115,7 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
           character: null,
           storyLog: [],
           currentStory: null,
+          decisionHistory: [],
           turnCount: 0,
           finalSummary: undefined,
           realityStats: { credibility: 5, stress: 2, connections: 3 },
@@ -122,6 +130,7 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
           character,
           currentStory: INTRO_STORY,
           storyLog: [INTRO_STORY],
+          decisionHistory: [],
           turnCount: 1,
           realityStats: { credibility: 5, stress: 2, connections: 3 },
           rules: INITIAL_RULES,
@@ -152,6 +161,7 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
         rules: state.rules,
         storyLog: state.storyLog,
         currentStory: state.currentStory,
+        decisionHistory: state.decisionHistory,
         realityStats: state.realityStats,
         turnCount: state.turnCount,
         maxTurns: state.maxTurns,
@@ -171,6 +181,7 @@ export const useCharacter = () => gameStore((s) => s.character);
 export const useRules = () => gameStore((s) => s.rules);
 export const useStoryLog = () => gameStore((s) => s.storyLog);
 export const useCurrentStory = () => gameStore((s) => s.currentStory);
+export const useDecisionHistory = () => gameStore((s) => s.decisionHistory);
 export const useRealityStats = () => gameStore((s) => s.realityStats);
 export const useTurnCount = () => gameStore((s) => s.turnCount);
 export const useMaxTurns = () => gameStore((s) => s.maxTurns);
@@ -190,6 +201,7 @@ export const useSetCharacter = () => gameStore((s) => s.setCharacter);
 export const useSetRules = () => gameStore((s) => s.setRules);
 export const useSetStoryLog = () => gameStore((s) => s.setStoryLog);
 export const useSetCurrentStory = () => gameStore((s) => s.setCurrentStory);
+export const useSetDecisionHistory = () => gameStore((s) => s.setDecisionHistory);
 export const useSetRealityStats = () => gameStore((s) => s.setRealityStats);
 export const useSetTurnCount = () => gameStore((s) => s.setTurnCount);
 export const useSetMaxTurns = () => gameStore((s) => s.setMaxTurns);

@@ -3,6 +3,7 @@ export enum Phase {
   SELECTION = 'SELECTION',
   LOADING = 'LOADING',
   GAMEPLAY = 'GAMEPLAY',
+  DECISION_MAP = 'DECISION_MAP',
   GAME_OVER = 'GAME_OVER'
 }
 
@@ -74,6 +75,7 @@ export interface GameState {
   rules: RuleCard[];
   storyLog: StoryNode[];
   currentStory: StoryNode | null;
+  decisionHistory: DecisionRecord[];
   realityStats: {
     credibility: number;
     stress: number;
@@ -82,6 +84,24 @@ export interface GameState {
   turnCount: number; // 当前推进的时间线节点
   maxTurns: number;  // 预设的剧本长度
   finalSummary?: string;
+}
+
+export interface DecisionRecord {
+  turn: number;
+  sceneTextPreview: string;
+  chosenOptionText: string;
+  chosenOptionId: string;
+  triggeredRules: TriggeredRule[];
+  statSnapshot: {
+    credibility: number;
+    stress: number;
+    connections: number;
+  };
+  statDelta: {
+    credibility: number;
+    stress: number;
+    connections: number;
+  };
 }
 
 // AI Configuration Types

@@ -4,6 +4,8 @@ import { CHARACTERS } from './constants';
 import CharacterCard from './components/CharacterCard';
 import RuleCardComponent from './components/RuleCard';
 import { AiSettingsModal } from './components/AiSettingsModal';
+import DecisionFlowPage from './components/DecisionFlowPage';
+import TurnCompleteToast from './components/TurnCompleteToast';
 import { processTurn } from './services/geminiService';
 import {
   usePhase,
@@ -22,6 +24,7 @@ import {
   useSetRules,
   useSetStoryLog,
   useSetCurrentStory,
+  useSetDecisionHistory,
   useSetRealityStats,
   useSetTurnCount,
   useSetFinalSummary,
@@ -61,6 +64,7 @@ const App: React.FC = () => {
   const setRules = useSetRules();
   const setStoryLog = useSetStoryLog();
   const setCurrentStory = useSetCurrentStory();
+  const setDecisionHistory = useSetDecisionHistory();
   const setRealityStats = useSetRealityStats();
   const setTurnCount = useSetTurnCount();
   const setFinalSummary = useSetFinalSummary();
@@ -69,6 +73,8 @@ const App: React.FC = () => {
   const resetGame = useResetGame();
   const startNewGame = useStartNewGame();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showTurnToast, setShowTurnToast] = useState(false);
+  const [toastTurn, setToastTurn] = useState(0);
 
   // Auto-scroll to bottom of story log
   useEffect(() => {
@@ -87,7 +93,7 @@ const App: React.FC = () => {
   };
 
   const handleChoice = async (choiceId: string, choiceText: string) => {
-    if (!character) return;
+    if (!character || !currentStory) return;
     
     setLoading(true);
 
@@ -116,6 +122,7 @@ const App: React.FC = () => {
 
     // 2. PROCESS STATE UPDATES
     // A. Update Stats
+    const previousStats = { ...realityStats };
     const newStats = { ...realityStats };
     if (result.statUpdates.credibility) newStats.credibility += result.statUpdates.credibility;
     if (result.statUpdates.stress) newStats.stress += result.statUpdates.stress;
@@ -151,16 +158,40 @@ const App: React.FC = () => {
     }
 
     // D. Update all states
+    const completedTurn = turnCount;
     setRealityStats(newStats);
     setRules(newRules);
     setCurrentStory(result.storyNode);
     setStoryLog(prev => [...prev, result.storyNode]);
     setTurnCount(turnCount + 1);
     setCurrentTriggeredRules(result.triggeredRules || []);
+    const scenePreview = currentStory.text.length > 80
+      ? `${currentStory.text.slice(0, 80)}…`
+      : currentStory.text;
+
+    setDecisionHistory((prev) => [
+      ...prev,
+      {
+        turn: completedTurn,
+        sceneTextPreview: scenePreview,
+        chosenOptionText: choiceText,
+        chosenOptionId: choiceId,
+        triggeredRules: result.triggeredRules || [],
+        statSnapshot: newStats,
+        statDelta: {
+          credibility: newStats.credibility - previousStats.credibility,
+          stress: newStats.stress - previousStats.stress,
+          connections: newStats.connections - previousStats.connections,
+        },
+      },
+    ]);
     
     if (isGameOver) {
       setPhase(Phase.GAME_OVER);
       setFinalSummary(summary);
+    } else {
+      setToastTurn(completedTurn);
+      setShowTurnToast(true);
     }
   };
 
@@ -440,10 +471,17 @@ const App: React.FC = () => {
         {/* MIDDLE COLUMN: Narrative (50%) */}
         <div className="flex-1 flex flex-col relative h-screen bg-paper/5">
           {/* Header Bar */}
-          <div className="shrink-0 h-12 bg-gradient-to-b from-black to-transparent z-20 flex justify-center items-center pointer-events-none">
+          <div className="shrink-0 h-12 bg-gradient-to-b from-black to-transparent z-20 flex items-center justify-center relative">
              <span className="text-gold opacity-50 font-display tracking-[0.5em] text-sm">
                 ACT {romanTurn(turnCount)} / {romanTurn(maxTurns)}
              </span>
+             <button
+               onClick={() => setPhase(Phase.DECISION_MAP)}
+               className="absolute right-4 top-1/2 -translate-y-1/2 p-2 border border-gold/60 text-gold rounded-full hover:bg-gold/10 transition-colors"
+               title="查看决策流程"
+             >
+               <i className="fa-solid fa-route text-sm"></i>
+             </button>
           </div>
 
           {/* Triggered Rules Banner */}
@@ -583,7 +621,14 @@ const App: React.FC = () => {
     <>
       {phase === Phase.SELECTION && renderSelection()}
       {phase === Phase.GAMEPLAY && renderGameplay()}
+      {phase === Phase.DECISION_MAP && <DecisionFlowPage />}
       {phase === Phase.GAME_OVER && renderGameOver()}
+      <TurnCompleteToast
+        isOpen={showTurnToast}
+        turnNumber={toastTurn}
+        onViewDecision={() => setPhase(Phase.DECISION_MAP)}
+        onDismiss={() => setShowTurnToast(false)}
+      />
       <AiSettingsModal />
     </>
   );
