@@ -44,6 +44,13 @@ export interface StoryNode {
   background?: string;
 }
 
+// 触发的规则信息
+export interface TriggeredRule {
+  ruleId: string;
+  ruleTitle: string;
+  reason: string; // 触发原因
+}
+
 // 新增：AI 计算后的状态变更指令
 export interface EngineResult {
   storyNode: StoryNode;
@@ -56,6 +63,7 @@ export interface EngineResult {
     add?: RuleCard[];
     removeIds?: string[];
   };
+  triggeredRules?: TriggeredRule[]; // 本轮触发的规则及原因
   isGameOver: boolean;
   gameSummary?: string; // 仅在 isGameOver 为 true 时存在
 }

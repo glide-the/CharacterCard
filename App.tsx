@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Phase, Character, EngineResult } from './types';
+import React, { useEffect, useRef, useState } from 'react';
+import { Phase, Character, EngineResult, TriggeredRule } from './types';
 import { CHARACTERS } from './constants';
 import CharacterCard from './components/CharacterCard';
 import RuleCardComponent from './components/RuleCard';
@@ -16,6 +16,7 @@ import {
   useMaxTurns,
   useFinalSummary,
   useLoading,
+  useCurrentTriggeredRules,
   useSetPhase,
   useSetCharacter,
   useSetRules,
@@ -25,6 +26,7 @@ import {
   useSetTurnCount,
   useSetFinalSummary,
   useSetLoading,
+  useSetCurrentTriggeredRules,
   useResetGame,
   useStartNewGame,
   useProvider,
@@ -45,6 +47,7 @@ const App: React.FC = () => {
   const maxTurns = useMaxTurns();
   const finalSummary = useFinalSummary();
   const loading = useLoading();
+  const currentTriggeredRules = useCurrentTriggeredRules();
 
   // AI Configuration
   const provider = useProvider();
@@ -62,6 +65,7 @@ const App: React.FC = () => {
   const setTurnCount = useSetTurnCount();
   const setFinalSummary = useSetFinalSummary();
   const setLoading = useSetLoading();
+  const setCurrentTriggeredRules = useSetCurrentTriggeredRules();
   const resetGame = useResetGame();
   const startNewGame = useStartNewGame();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -152,6 +156,7 @@ const App: React.FC = () => {
     setCurrentStory(result.storyNode);
     setStoryLog(prev => [...prev, result.storyNode]);
     setTurnCount(turnCount + 1);
+    setCurrentTriggeredRules(result.triggeredRules || []);
     
     if (isGameOver) {
       setPhase(Phase.GAME_OVER);
@@ -166,7 +171,7 @@ const App: React.FC = () => {
   // --- Render Functions ---
 
   const renderSelection = () => (
-    <div className="min-h-screen w-full flex flex-col items-center justify-start p-8 bg-velvet-red relative overflow-y-auto">
+    <div className="h-screen w-full flex flex-col items-center bg-velvet-red relative overflow-hidden">
         {/* Background Overlay */}
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle,transparent_20%,#000000_100%)] opacity-80 fixed"></div>
         
@@ -179,21 +184,21 @@ const App: React.FC = () => {
           <i className="fa-solid fa-cog text-xl group-hover:rotate-90 transition-transform duration-300"></i>
         </button>
         
-        <div className="z-10 text-center mb-12 mt-8 animate-float">
-          <h1 className="text-5xl md:text-7xl font-bold text-gold-flow mb-4 drop-shadow-lg font-display">
+        <div className="z-10 text-center mb-6 mt-6 shrink-0 animate-float">
+          <h1 className="text-4xl md:text-6xl font-bold text-gold-flow mb-2 drop-shadow-lg font-display">
             人格编年史
           </h1>
-          <p className="text-paper text-lg font-serif italic opacity-80 max-w-2xl mx-auto border-b border-gold pb-4">
+          <p className="text-paper text-base font-serif italic opacity-80 max-w-2xl mx-auto border-b border-gold pb-3">
             "选择你的面具。这个世界的规则并非刻在石头上，而是由鲜血和抉择书写。"
           </p>
         </div>
 
-        <div className="z-20 flex flex-col items-center gap-4 mb-12 sticky top-4">
+        <div className="z-20 flex flex-col items-center gap-3 mb-4 shrink-0">
             <button 
               disabled={!character}
               onClick={handleStartGame}
               className={`
-                px-12 py-4 text-xl font-bold font-display tracking-widest uppercase transition-all duration-500
+                px-10 py-3 text-lg font-bold font-display tracking-widest uppercase transition-all duration-500
                 border-2 border-gold relative overflow-hidden group shadow-2xl
                 ${character 
                   ? 'bg-velvet-red text-gold shadow-[0_0_30px_#D4AF37] hover:scale-110' 
@@ -208,22 +213,24 @@ const App: React.FC = () => {
             </button>
         </div>
 
-        <div className="z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-[1600px] mb-20 px-4">
-          {CHARACTERS.map(char => (
-            <div key={char.id} className="flex justify-center">
-               <CharacterCard 
-                  character={char} 
-                  isSelected={character?.id === char.id}
-                  onSelect={handleCharacterSelect}
-               />
-            </div>
-          ))}
+        <div className="z-10 flex-1 overflow-y-auto w-full px-4 pb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-[1600px] mx-auto">
+            {CHARACTERS.map(char => (
+              <div key={char.id} className="flex justify-center">
+                 <CharacterCard 
+                    character={char} 
+                    isSelected={character?.id === char.id}
+                    onSelect={handleCharacterSelect}
+                 />
+              </div>
+            ))}
+          </div>
         </div>
     </div>
   );
 
   const renderGameOver = () => (
-      <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      <div className="h-screen w-full bg-black flex flex-col items-center justify-center p-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-20"></div>
           
           {/* Settings Button */}
@@ -279,8 +286,32 @@ const App: React.FC = () => {
         return roman[num - 1] || num;
     };
 
+    // Filter REALITY rules for left panel parsing
+    const realityRules = rules.filter(r => r.type === 'REALITY' && r.active);
+
+    // Parse threshold warnings from REALITY rules and current stats
+    const getStatWarnings = () => {
+      const warnings: { stat: string; message: string; critical: boolean }[] = [];
+      if (realityStats.credibility < 3) {
+        warnings.push({ stat: 'credibility', message: '信誉过低！NPC 将产生敌意', critical: true });
+      }
+      if (realityStats.stress > 7) {
+        warnings.push({ stat: 'stress', message: '压力过高！可能触发幻觉事件', critical: true });
+      }
+      if (realityStats.connections <= 1) {
+        warnings.push({ stat: 'connections', message: '人脉枯竭，陷入孤立', critical: realityStats.connections === 0 });
+      }
+      return warnings;
+    };
+
+    const statWarnings = getStatWarnings();
+
+    // Build a map of triggered rules for quick lookup
+    const triggeredMap = new Map<string, TriggeredRule>();
+    currentTriggeredRules.forEach(tr => triggeredMap.set(tr.ruleId, tr));
+
     return (
-      <div className="min-h-screen w-full bg-[#1a0505] flex flex-col md:flex-row text-paper overflow-hidden relative">
+      <div className="h-screen w-full bg-[#1a0505] flex flex-col md:flex-row text-paper overflow-hidden relative">
         
         {/* Settings Button */}
         <button
@@ -292,46 +323,116 @@ const App: React.FC = () => {
         </button>
         
         {/* LEFT COLUMN: Character & Stats (25%) */}
-        <div className="hidden md:flex flex-col w-1/4 bg-[#0f0303] border-r-4 border-brown-600 p-6 relative shadow-2xl z-10">
-          <div className="sticky top-6">
-            <h2 className="text-gold font-display text-2xl mb-6 border-b border-brown pb-2 text-center">当前角色</h2>
+        <div className="hidden md:flex flex-col w-1/4 bg-[#0f0303] border-r-4 border-brown-600 relative shadow-2xl z-10 h-screen overflow-y-auto scrollbar-hide">
+          <div className="p-6">
+            <h2 className="text-gold font-display text-xl mb-4 border-b border-brown pb-2 text-center">当前角色</h2>
             {character && (
-               <div className="flex justify-center transform scale-75 origin-top mb-[-80px]">
+               <div className="flex justify-center transform scale-[0.6] origin-top mb-[-120px]">
                  <CharacterCard character={character} isSelected={true} />
                </div>
             )}
             
-            <div className="mt-28">
-                <h2 className="text-gold font-display text-xl mb-4 border-b border-brown pb-2">现实映射</h2>
-                <div className="space-y-6 bg-brown-800/30 p-4 rounded-lg border border-brown">
-                <div className="group">
-                    <div className="flex justify-between mb-1 text-sm font-bold text-stone-gray">
-                        <span><i className="fa-solid fa-scale-balanced mr-2"></i>信誉度</span> 
-                        <span>{realityStats.credibility}/10</span>
-                    </div>
-                    <div className="w-full bg-[#2c1810] h-3 rounded-full overflow-hidden border border-brown-600">
-                        <div className="bg-forest-green h-full transition-all duration-1000" style={{ width: `${realityStats.credibility * 10}%` }}></div>
-                    </div>
+            <div className="mt-20">
+                <h2 className="text-gold font-display text-lg mb-3 border-b border-brown pb-2 flex items-center gap-2">
+                  <i className="fa-solid fa-map text-sm"></i>现实映射
+                </h2>
+
+                {/* Stat Bars */}
+                <div className="space-y-4 bg-brown-800/30 p-3 rounded-lg border border-brown">
+                  <div className="group">
+                      <div className="flex justify-between mb-1 text-xs font-bold text-stone-gray">
+                          <span><i className="fa-solid fa-scale-balanced mr-1.5"></i>信誉度</span> 
+                          <span className={realityStats.credibility < 3 ? 'text-red-400 animate-pulse' : ''}>{realityStats.credibility}/10</span>
+                      </div>
+                      <div className="w-full bg-[#2c1810] h-2.5 rounded-full overflow-hidden border border-brown-600 relative">
+                          <div className="bg-forest-green h-full transition-all duration-1000" style={{ width: `${realityStats.credibility * 10}%` }}></div>
+                          {/* Threshold marker at 3 */}
+                          <div className="absolute top-0 bottom-0 w-0.5 bg-red-500/60" style={{ left: '30%' }} title="危险阈值: 3"></div>
+                      </div>
+                      {realityStats.credibility < 3 && (
+                        <p className="text-[10px] text-red-400 mt-0.5 italic"><i className="fa-solid fa-triangle-exclamation mr-1"></i>NPC 将产生敌意</p>
+                      )}
+                  </div>
+                  <div className="group">
+                      <div className="flex justify-between mb-1 text-xs font-bold text-stone-gray">
+                          <span><i className="fa-solid fa-brain mr-1.5"></i>精神压力</span> 
+                          <span className={realityStats.stress > 7 ? 'text-red-400 animate-pulse' : ''}>{realityStats.stress}/10</span>
+                      </div>
+                      <div className="w-full bg-[#2c1810] h-2.5 rounded-full overflow-hidden border border-brown-600 relative">
+                          <div className={`h-full transition-all duration-1000 ${realityStats.stress > 7 ? 'bg-red-600 animate-pulse' : 'bg-orange-700'}`} style={{ width: `${realityStats.stress * 10}%` }}></div>
+                          {/* Threshold marker at 8 */}
+                          <div className="absolute top-0 bottom-0 w-0.5 bg-red-500/60" style={{ left: '80%' }} title="危险阈值: 8"></div>
+                      </div>
+                      {realityStats.stress > 7 && (
+                        <p className="text-[10px] text-red-400 mt-0.5 italic"><i className="fa-solid fa-triangle-exclamation mr-1"></i>可能触发幻觉事件</p>
+                      )}
+                  </div>
+                  <div className="group">
+                      <div className="flex justify-between mb-1 text-xs font-bold text-stone-gray">
+                          <span><i className="fa-solid fa-handshake mr-1.5"></i>人脉</span> 
+                          <span className={realityStats.connections <= 1 ? 'text-yellow-400' : ''}>{realityStats.connections}/10</span>
+                      </div>
+                      <div className="w-full bg-[#2c1810] h-2.5 rounded-full overflow-hidden border border-brown-600">
+                          <div className="bg-blue-700 h-full transition-all duration-1000" style={{ width: `${realityStats.connections * 10}%` }}></div>
+                      </div>
+                      {realityStats.connections === 0 && (
+                        <p className="text-[10px] text-yellow-400 mt-0.5 italic"><i className="fa-solid fa-triangle-exclamation mr-1"></i>完全孤立</p>
+                      )}
+                  </div>
                 </div>
-                <div className="group">
-                    <div className="flex justify-between mb-1 text-sm font-bold text-stone-gray">
-                        <span><i className="fa-solid fa-brain mr-2"></i>精神压力</span> 
-                        <span>{realityStats.stress}/10</span>
+
+                {/* Critical Warning Banner */}
+                {statWarnings.some(w => w.critical) && (
+                  <div className="mt-3 p-2 bg-red-900/40 border border-red-700/60 rounded-lg animate-pulse">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <i className="fa-solid fa-skull-crossbones text-red-400 text-xs"></i>
+                      <span className="text-red-400 text-[10px] font-bold uppercase tracking-wider">危险状态</span>
                     </div>
-                    <div className="w-full bg-[#2c1810] h-3 rounded-full overflow-hidden border border-brown-600">
-                        <div className={`h-full transition-all duration-1000 ${realityStats.stress > 7 ? 'bg-red-600 animate-pulse' : 'bg-orange-700'}`} style={{ width: `${realityStats.stress * 10}%` }}></div>
+                    {statWarnings.filter(w => w.critical).map((w, i) => (
+                      <p key={i} className="text-[10px] text-red-300 leading-snug">{w.message}</p>
+                    ))}
+                  </div>
+                )}
+
+                {/* REALITY Rules Parsed Display */}
+                {realityRules.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-purple-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <i className="fa-solid fa-eye text-[10px]"></i>
+                      现实法则解析
+                    </h3>
+                    <div className="space-y-2">
+                      {realityRules.map(rule => {
+                        const isTriggeredNow = triggeredMap.has(rule.id);
+                        return (
+                          <div 
+                            key={rule.id} 
+                            className={`p-2 rounded border text-[11px] leading-snug transition-all ${
+                              isTriggeredNow 
+                                ? 'bg-purple-900/40 border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.3)]' 
+                                : 'bg-[#1a0a1a]/50 border-purple-900/40'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1 mb-0.5">
+                              <i className="fa-solid fa-scale-balanced text-purple-400 text-[9px]"></i>
+                              <span className="font-bold text-purple-300">{rule.title}</span>
+                              {isTriggeredNow && (
+                                <span className="ml-auto text-[9px] bg-purple-600 text-white px-1 py-0.5 rounded">生效中</span>
+                              )}
+                            </div>
+                            <p className="text-purple-200/70">{rule.description}</p>
+                            {isTriggeredNow && triggeredMap.get(rule.id) && (
+                              <p className="text-yellow-300/80 mt-1 italic text-[10px]">
+                                <i className="fa-solid fa-bolt text-[8px] mr-0.5"></i>
+                                {triggeredMap.get(rule.id)!.reason}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                </div>
-                 <div className="group">
-                    <div className="flex justify-between mb-1 text-sm font-bold text-stone-gray">
-                        <span><i className="fa-solid fa-handshake mr-2"></i>人脉</span> 
-                        <span>{realityStats.connections}/10</span>
-                    </div>
-                    <div className="w-full bg-[#2c1810] h-3 rounded-full overflow-hidden border border-brown-600">
-                        <div className="bg-blue-700 h-full transition-all duration-1000" style={{ width: `${realityStats.connections * 10}%` }}></div>
-                    </div>
-                </div>
-                </div>
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -339,23 +440,45 @@ const App: React.FC = () => {
         {/* MIDDLE COLUMN: Narrative (50%) */}
         <div className="flex-1 flex flex-col relative h-screen bg-paper/5">
           {/* Header Bar */}
-          <div className="absolute top-0 w-full h-16 bg-gradient-to-b from-black to-transparent z-20 flex justify-center items-center pointer-events-none">
+          <div className="shrink-0 h-12 bg-gradient-to-b from-black to-transparent z-20 flex justify-center items-center pointer-events-none">
              <span className="text-gold opacity-50 font-display tracking-[0.5em] text-sm">
                 ACT {romanTurn(turnCount)} / {romanTurn(maxTurns)}
              </span>
           </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 md:p-16 scrollbar-hide scroll-smooth">
+          {/* Triggered Rules Banner */}
+          {currentTriggeredRules.length > 0 && !loading && (
+            <div className="shrink-0 mx-4 md:mx-8 mb-2 p-2 bg-yellow-900/20 border border-yellow-600/40 rounded-lg">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-yellow-400 text-xs font-bold flex items-center gap-1">
+                  <i className="fa-solid fa-bolt text-[10px]"></i>本轮触发:
+                </span>
+                {currentTriggeredRules.map((tr, i) => (
+                  <span key={i} className="group relative inline-flex items-center text-xs bg-yellow-800/40 text-yellow-200 px-2 py-0.5 rounded border border-yellow-600/30 cursor-help">
+                    {tr.ruleTitle}
+                    {/* Inline hover tooltip */}
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#1a0505] border border-yellow-500/50 rounded text-[10px] text-paper leading-snug opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                      <span className="text-yellow-400 font-bold block mb-0.5">触发原因:</span>
+                      {tr.reason}
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1a0505] border-r border-b border-yellow-500/50 transform rotate-45"></span>
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 md:px-12 py-4 scrollbar-hide scroll-smooth">
              {/* Story Log */}
              {storyLog.slice(0, -1).map((node, idx) => (
-                <div key={idx} className="mb-12 opacity-50 text-base font-serif border-l-4 border-brown-600 pl-6 italic hover:opacity-100 transition-opacity">
+                <div key={idx} className="mb-8 opacity-50 text-sm font-serif border-l-4 border-brown-600 pl-4 italic hover:opacity-100 transition-opacity">
                     <p>{node.text}</p>
                 </div>
              ))}
 
              {/* Current Node */}
-             <div className="animate-fade-in-up pb-20">
-                <div className="flex items-center justify-center mb-8 text-gold opacity-80">
+             <div className="animate-fade-in-up pb-8">
+                <div className="flex items-center justify-center mb-6 text-gold opacity-80">
                    <div className="h-[1px] w-12 bg-gold"></div>
                    <i className="fa-solid fa-diamond text-sm mx-4 animate-spin-slow"></i>
                    <span className="uppercase tracking-[0.3em] text-sm font-display">
@@ -365,37 +488,37 @@ const App: React.FC = () => {
                    <div className="h-[1px] w-12 bg-gold"></div>
                 </div>
                 
-                <p className="font-serif text-2xl md:text-3xl leading-relaxed mb-12 drop-shadow-md text-justify text-paper first-letter:text-6xl first-letter:font-display first-letter:text-gold first-letter:mr-3 first-letter:float-left">
+                <p className="font-serif text-xl md:text-2xl leading-relaxed mb-8 drop-shadow-md text-justify text-paper first-letter:text-5xl first-letter:font-display first-letter:text-gold first-letter:mr-2 first-letter:float-left">
                   {currentStory.text}
                 </p>
 
                 {loading ? (
-                   <div className="flex flex-col justify-center items-center py-12 gap-4">
+                   <div className="flex flex-col justify-center items-center py-8 gap-3">
                       <div className="relative">
-                          <i className="fa-solid fa-sun fa-spin text-6xl text-gold opacity-20"></i>
-                          <i className="fa-solid fa-eye absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl text-gold animate-pulse"></i>
+                          <i className="fa-solid fa-sun fa-spin text-5xl text-gold opacity-20"></i>
+                          <i className="fa-solid fa-eye absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl text-gold animate-pulse"></i>
                       </div>
-                      <span className="font-serif italic text-xl text-stone-gray animate-pulse">规则引擎正在演算后果...</span>
-                      <div className="text-xs text-brown font-mono mt-2">
+                      <span className="font-serif italic text-lg text-stone-gray animate-pulse">规则引擎正在演算后果...</span>
+                      <div className="text-xs text-brown font-mono mt-1">
                           Checking: {rules.filter(r => r.active).map(r => r.title).slice(0, 3).join(", ")}...
                       </div>
                    </div>
                 ) : (
-                  <div className="grid gap-6 max-w-3xl mx-auto">
+                  <div className="grid gap-4 max-w-3xl mx-auto">
                     {currentStory.choices.map((choice) => (
                       <button
                         key={choice.id}
                         onClick={() => handleChoice(choice.id, choice.text)}
-                        className="group relative p-6 bg-[#2c1810] border-2 border-brown text-left hover:bg-[#3d2216] hover:border-gold transition-all duration-300 rounded-xl overflow-hidden shadow-lg"
+                        className="group relative p-5 bg-[#2c1810] border-2 border-brown text-left hover:bg-[#3d2216] hover:border-gold transition-all duration-300 rounded-xl overflow-hidden shadow-lg"
                       >
                          <div className="absolute inset-0 bg-gold opacity-0 group-hover:opacity-5 transition-opacity"></div>
                          <div className="absolute left-0 top-0 bottom-0 w-2 bg-gold transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom duration-300"></div>
                          
-                         <div className="flex items-start gap-4">
+                         <div className="flex items-start gap-3">
                              <div className="mt-1 text-gold opacity-50 group-hover:opacity-100"><i className="fa-solid fa-chevron-right"></i></div>
                              <div>
-                                <h4 className="font-bold text-xl mb-2 group-hover:text-gold transition-colors font-display">{choice.text}</h4>
-                                <div className="flex flex-wrap gap-4 text-sm opacity-70 font-serif">
+                                <h4 className="font-bold text-lg mb-1.5 group-hover:text-gold transition-colors font-display">{choice.text}</h4>
+                                <div className="flex flex-wrap gap-3 text-sm opacity-70 font-serif">
                                     {choice.cost && <span className="text-red-400 flex items-center gap-1"><i className="fa-solid fa-coins"></i> {choice.cost}</span>}
                                     {choice.risk && <span className="text-orange-400 flex items-center gap-1"><i className="fa-solid fa-triangle-exclamation"></i> {choice.risk}</span>}
                                     <span className="text-stone-gray italic border-l border-stone-gray pl-3">{choice.consequence}</span>
@@ -411,30 +534,41 @@ const App: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN: Rules Deck (25%) */}
-        <div className="hidden md:flex flex-col w-1/4 bg-[#140404] border-l-4 border-brown-600 p-6 shadow-2xl z-10">
-            <h2 className="text-gold font-display text-xl mb-6 border-b border-brown pb-2 flex justify-between items-center">
+        <div className="hidden md:flex flex-col w-1/4 bg-[#140404] border-l-4 border-brown-600 p-4 shadow-2xl z-10 h-screen">
+            <h2 className="text-gold font-display text-lg mb-4 border-b border-brown pb-2 flex justify-between items-center shrink-0">
               <span>世界法则</span>
-              <span className="text-xs bg-velvet-red px-2 py-1 rounded text-gold border border-gold">{rules.filter(r => r.active).length} 激活</span>
+              <div className="flex items-center gap-2">
+                {currentTriggeredRules.length > 0 && (
+                  <span className="text-[10px] bg-yellow-600 px-1.5 py-0.5 rounded text-black font-bold border border-yellow-400">
+                    <i className="fa-solid fa-bolt mr-0.5"></i>{currentTriggeredRules.length} 触发
+                  </span>
+                )}
+                <span className="text-xs bg-velvet-red px-2 py-0.5 rounded text-gold border border-gold">{rules.filter(r => r.active).length} 激活</span>
+              </div>
             </h2>
             
-            <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide space-y-4">
+            <div className="flex-1 overflow-y-auto pr-1 scrollbar-hide space-y-3">
                {rules.filter(r => r.active).map(rule => (
-                  <RuleCardComponent key={rule.id} rule={rule} />
+                  <RuleCardComponent 
+                    key={rule.id} 
+                    rule={rule} 
+                    triggeredInfo={triggeredMap.get(rule.id)}
+                  />
                ))}
                
                {rules.some(r => !r.active) && (
-                   <div className="text-center p-4 border border-dashed border-brown-600 opacity-50 rounded-lg">
+                   <div className="text-center p-3 border border-dashed border-brown-600 opacity-50 rounded-lg">
                        <p className="text-xs text-stone-gray">隐藏的规则在黑暗中沉睡...</p>
                    </div>
                )}
             </div>
 
-            <div className="mt-6 p-4 bg-brown-800/20 rounded border border-brown text-center">
-                <i className="fa-solid fa-gear text-2xl text-brown mb-2 animate-spin-slow opacity-50"></i>
-                <p className="text-xs text-stone-gray italic">"系统正在监听每一个抉择。"</p>
+            <div className="mt-4 p-3 bg-brown-800/20 rounded border border-brown text-center shrink-0">
+                <i className="fa-solid fa-gear text-xl text-brown mb-1 animate-spin-slow opacity-50"></i>
+                <p className="text-[10px] text-stone-gray italic">"系统正在监听每一个抉择。"</p>
                 <button 
                   onClick={resetGame}
-                  className="mt-3 text-xs text-paper/60 hover:text-gold transition-colors duration-300 underline underline-offset-2 decoration-dotted"
+                  className="mt-2 text-xs text-paper/60 hover:text-gold transition-colors duration-300 underline underline-offset-2 decoration-dotted"
                 >
                   <i className="fa-solid fa-rotate-right mr-1"></i>
                   清除数据重新开始

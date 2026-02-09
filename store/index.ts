@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { GameState, Phase, Character, RuleCard, StoryNode, ServiceProvider, OpenAIConfig } from "../types";
+import { GameState, Phase, Character, RuleCard, StoryNode, ServiceProvider, OpenAIConfig, TriggeredRule } from "../types";
 import { INITIAL_RULES, INTRO_STORY } from "../constants";
 
 const localStorageStorage = createJSONStorage(() => localStorage);
 
 export interface GameStoreState extends GameState {
   loading: boolean;
+  currentTriggeredRules: TriggeredRule[];
   // AI Configuration
   showAiSettings: boolean;
   provider: ServiceProvider;
@@ -25,6 +26,7 @@ export interface GameStoreActions {
   setMaxTurns: (count: number) => void;
   setFinalSummary: (summary: string | undefined) => void;
   setLoading: (loading: boolean) => void;
+  setCurrentTriggeredRules: (rules: TriggeredRule[]) => void;
   updateGameState: (updater: (prev: GameState) => Partial<GameState>) => void;
   resetGame: () => void;
   startNewGame: (character: Character) => void;
@@ -46,6 +48,7 @@ const initialState: GameStoreState = {
   maxTurns: 10,
   finalSummary: undefined,
   loading: false,
+  currentTriggeredRules: [],
   // AI Configuration
   showAiSettings: false,
   provider: 'gemini',
@@ -91,6 +94,8 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
       
       setLoading: (loading) => set({ loading }),
       
+      setCurrentTriggeredRules: (rules) => set({ currentTriggeredRules: rules }),
+      
       updateGameState: (updater) =>
         set((state) => {
           const updates = updater(state as GameState);
@@ -108,6 +113,7 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
           realityStats: { credibility: 5, stress: 2, connections: 3 },
           rules: INITIAL_RULES,
           loading: false,
+          currentTriggeredRules: [],
         }),
       
       startNewGame: (character) =>
@@ -121,6 +127,7 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
           rules: INITIAL_RULES,
           finalSummary: undefined,
           loading: false,
+          currentTriggeredRules: [],
         }),
       
       // AI Configuration Actions
@@ -169,6 +176,7 @@ export const useTurnCount = () => gameStore((s) => s.turnCount);
 export const useMaxTurns = () => gameStore((s) => s.maxTurns);
 export const useFinalSummary = () => gameStore((s) => s.finalSummary);
 export const useLoading = () => gameStore((s) => s.loading);
+export const useCurrentTriggeredRules = () => gameStore((s) => s.currentTriggeredRules);
 
 // AI Configuration hooks
 export const useShowAiSettings = () => gameStore((s) => s.showAiSettings);
@@ -187,6 +195,7 @@ export const useSetTurnCount = () => gameStore((s) => s.setTurnCount);
 export const useSetMaxTurns = () => gameStore((s) => s.setMaxTurns);
 export const useSetFinalSummary = () => gameStore((s) => s.setFinalSummary);
 export const useSetLoading = () => gameStore((s) => s.setLoading);
+export const useSetCurrentTriggeredRules = () => gameStore((s) => s.setCurrentTriggeredRules);
 export const useUpdateGameState = () => gameStore((s) => s.updateGameState);
 export const useResetGame = () => gameStore((s) => s.resetGame);
 export const useStartNewGame = () => gameStore((s) => s.startNewGame);

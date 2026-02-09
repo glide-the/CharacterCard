@@ -1,5 +1,5 @@
 import { Type } from "@google/genai";
-import { Character, RuleCard, EngineResult } from "../types";
+import { Character, RuleCard, EngineResult, TriggeredRule } from "../types";
 import { generateContent, AIProviderConfig } from "./aiEngine";
 
 const SYSTEM_PROMPT = `
@@ -12,6 +12,7 @@ Your role is to execute the game loop:
 3. **Generate Output**: 
    - Write the narrative (Simplified Chinese).
    - Calculate numeric changes to stats (Stress, Credibility, Connections).
+   - **IMPORTANT**: Report which rules were triggered this turn via the "triggeredRules" field. Each triggered rule must include its ID, title, and a brief reason explaining WHY it triggered based on the player's action.
    - Determine if the game ends (Victory or Death).
 
 **Current Reality Mapping (Stats):**
@@ -58,6 +59,18 @@ const responseSchema = {
     },
     isGameOver: { type: Type.BOOLEAN },
     gameSummary: { type: Type.STRING, description: "Only if isGameOver is true." },
+    triggeredRules: {
+      type: Type.ARRAY,
+      description: "List of rules that triggered this turn with reasons.",
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          ruleId: { type: Type.STRING, description: "The ID of the triggered rule" },
+          ruleTitle: { type: Type.STRING, description: "The title of the triggered rule" },
+          reason: { type: Type.STRING, description: "Brief explanation of WHY this rule triggered based on the player action" }
+        }
+      }
+    },
     choices: {
       type: Type.ARRAY,
       items: {
@@ -102,7 +115,7 @@ export const processTurn = async (
     
     [DIRECTIVES]
     1. Based on the player action and active rules, determine what happens next.
-    2. Did any rule trigger? If "Murphy's Law" is active and they tried a complex plan, fail it.
+    2. Did any rule trigger? If "Murphy's Law" is active and they tried a complex plan, fail it. You MUST report ALL triggered rules in "triggeredRules" with a brief reason for each.
     3. Update Stats: Did they get hurt? (Stress +). Did they offend someone? (Credibility -).
     4. **Rule Evolution**: If the story shifts significantly, you may Add a Rule (e.g., "Injury") or Remove one.
     5. ${isFinalTurn ? "This is the CLIMAX. Ignore choices generation. Set 'isGameOver': true and provide a 'gameSummary'." : "Generate 3 distinct choices for the next step."}
@@ -137,7 +150,8 @@ export const processTurn = async (
             removeIds: json.ruleUpdates?.removeIds || []
         },
         isGameOver: !!json.isGameOver,
-        gameSummary: json.gameSummary
+        gameSummary: json.gameSummary,
+        triggeredRules: json.triggeredRules || []
     };
 
   } catch (error) {
