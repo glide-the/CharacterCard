@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Phase, Character, EngineResult, TriggeredRule } from './types';
 import { CHARACTERS } from './constants';
 import CharacterCard from './components/CharacterCard';
@@ -6,7 +6,10 @@ import RuleCardComponent from './components/RuleCard';
 import { AiSettingsModal } from './components/AiSettingsModal';
 import DecisionFlowPage from './components/DecisionFlowPage';
 import TurnCompleteToast from './components/TurnCompleteToast';
+import RealityMappingPanel from './components/RealityMappingPanel';
 import { processTurn } from './services/geminiService';
+import { parseRuleMappings } from './utils/ruleParser';
+import { mergeTriggeredRules } from './utils/ruleValidator';
 import {
   usePhase,
   useCharacter,
@@ -75,6 +78,16 @@ const App: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTurnToast, setShowTurnToast] = useState(false);
   const [toastTurn, setToastTurn] = useState(0);
+  const [autoTooltipToken, setAutoTooltipToken] = useState(0);
+  const [hoveredTriggeredRuleId, setHoveredTriggeredRuleId] = useState<string | null>(null);
+  const parsedMappings = useMemo(
+    () => parseRuleMappings(rules, realityStats),
+    [rules, realityStats]
+  );
+  const parsedMappingMap = useMemo(
+    () => new Map(parsedMappings.map((mapping) => [mapping.rule.id, mapping])),
+    [parsedMappings]
+  );
 
   // Auto-scroll to bottom of story log
   useEffect(() => {
@@ -82,6 +95,12 @@ const App: React.FC = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [storyLog, currentStory, loading]);
+
+  useEffect(() => {
+    if (currentTriggeredRules.length > 0) {
+      setAutoTooltipToken((prev) => prev + 1);
+    }
+  }, [currentTriggeredRules]);
 
   const handleCharacterSelect = (char: Character) => {
     setCharacter(char);
@@ -164,7 +183,12 @@ const App: React.FC = () => {
     setCurrentStory(result.storyNode);
     setStoryLog(prev => [...prev, result.storyNode]);
     setTurnCount(turnCount + 1);
-    setCurrentTriggeredRules(result.triggeredRules || []);
+    const mergedTriggeredRules = mergeTriggeredRules({
+      activeRules: newRules.filter((rule) => rule.active),
+      newStats,
+      aiTriggeredRules: result.triggeredRules || []
+    });
+    setCurrentTriggeredRules(mergedTriggeredRules);
     const scenePreview = currentStory.text.length > 80
       ? `${currentStory.text.slice(0, 80)}…`
       : currentStory.text;
@@ -176,7 +200,7 @@ const App: React.FC = () => {
         sceneTextPreview: scenePreview,
         chosenOptionText: choiceText,
         chosenOptionId: choiceId,
-        triggeredRules: result.triggeredRules || [],
+        triggeredRules: mergedTriggeredRules,
         statSnapshot: newStats,
         statDelta: {
           credibility: newStats.credibility - previousStats.credibility,
@@ -317,26 +341,6 @@ const App: React.FC = () => {
         return roman[num - 1] || num;
     };
 
-    // Filter REALITY rules for left panel parsing
-    const realityRules = rules.filter(r => r.type === 'REALITY' && r.active);
-
-    // Parse threshold warnings from REALITY rules and current stats
-    const getStatWarnings = () => {
-      const warnings: { stat: string; message: string; critical: boolean }[] = [];
-      if (realityStats.credibility < 3) {
-        warnings.push({ stat: 'credibility', message: '信誉过低！NPC 将产生敌意', critical: true });
-      }
-      if (realityStats.stress > 7) {
-        warnings.push({ stat: 'stress', message: '压力过高！可能触发幻觉事件', critical: true });
-      }
-      if (realityStats.connections <= 1) {
-        warnings.push({ stat: 'connections', message: '人脉枯竭，陷入孤立', critical: realityStats.connections === 0 });
-      }
-      return warnings;
-    };
-
-    const statWarnings = getStatWarnings();
-
     // Build a map of triggered rules for quick lookup
     const triggeredMap = new Map<string, TriggeredRule>();
     currentTriggeredRules.forEach(tr => triggeredMap.set(tr.ruleId, tr));
@@ -367,103 +371,12 @@ const App: React.FC = () => {
                 <h2 className="text-gold font-display text-lg mb-3 border-b border-brown pb-2 flex items-center gap-2">
                   <i className="fa-solid fa-map text-sm"></i>现实映射
                 </h2>
-
-                {/* Stat Bars */}
-                <div className="space-y-4 bg-brown-800/30 p-3 rounded-lg border border-brown">
-                  <div className="group">
-                      <div className="flex justify-between mb-1 text-xs font-bold text-stone-gray">
-                          <span><i className="fa-solid fa-scale-balanced mr-1.5"></i>信誉度</span> 
-                          <span className={realityStats.credibility < 3 ? 'text-red-400 animate-pulse' : ''}>{realityStats.credibility}/10</span>
-                      </div>
-                      <div className="w-full bg-[#2c1810] h-2.5 rounded-full overflow-hidden border border-brown-600 relative">
-                          <div className="bg-forest-green h-full transition-all duration-1000" style={{ width: `${realityStats.credibility * 10}%` }}></div>
-                          {/* Threshold marker at 3 */}
-                          <div className="absolute top-0 bottom-0 w-0.5 bg-red-500/60" style={{ left: '30%' }} title="危险阈值: 3"></div>
-                      </div>
-                      {realityStats.credibility < 3 && (
-                        <p className="text-[10px] text-red-400 mt-0.5 italic"><i className="fa-solid fa-triangle-exclamation mr-1"></i>NPC 将产生敌意</p>
-                      )}
-                  </div>
-                  <div className="group">
-                      <div className="flex justify-between mb-1 text-xs font-bold text-stone-gray">
-                          <span><i className="fa-solid fa-brain mr-1.5"></i>精神压力</span> 
-                          <span className={realityStats.stress > 7 ? 'text-red-400 animate-pulse' : ''}>{realityStats.stress}/10</span>
-                      </div>
-                      <div className="w-full bg-[#2c1810] h-2.5 rounded-full overflow-hidden border border-brown-600 relative">
-                          <div className={`h-full transition-all duration-1000 ${realityStats.stress > 7 ? 'bg-red-600 animate-pulse' : 'bg-orange-700'}`} style={{ width: `${realityStats.stress * 10}%` }}></div>
-                          {/* Threshold marker at 8 */}
-                          <div className="absolute top-0 bottom-0 w-0.5 bg-red-500/60" style={{ left: '80%' }} title="危险阈值: 8"></div>
-                      </div>
-                      {realityStats.stress > 7 && (
-                        <p className="text-[10px] text-red-400 mt-0.5 italic"><i className="fa-solid fa-triangle-exclamation mr-1"></i>可能触发幻觉事件</p>
-                      )}
-                  </div>
-                  <div className="group">
-                      <div className="flex justify-between mb-1 text-xs font-bold text-stone-gray">
-                          <span><i className="fa-solid fa-handshake mr-1.5"></i>人脉</span> 
-                          <span className={realityStats.connections <= 1 ? 'text-yellow-400' : ''}>{realityStats.connections}/10</span>
-                      </div>
-                      <div className="w-full bg-[#2c1810] h-2.5 rounded-full overflow-hidden border border-brown-600">
-                          <div className="bg-blue-700 h-full transition-all duration-1000" style={{ width: `${realityStats.connections * 10}%` }}></div>
-                      </div>
-                      {realityStats.connections === 0 && (
-                        <p className="text-[10px] text-yellow-400 mt-0.5 italic"><i className="fa-solid fa-triangle-exclamation mr-1"></i>完全孤立</p>
-                      )}
-                  </div>
-                </div>
-
-                {/* Critical Warning Banner */}
-                {statWarnings.some(w => w.critical) && (
-                  <div className="mt-3 p-2 bg-red-900/40 border border-red-700/60 rounded-lg animate-pulse">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <i className="fa-solid fa-skull-crossbones text-red-400 text-xs"></i>
-                      <span className="text-red-400 text-[10px] font-bold uppercase tracking-wider">危险状态</span>
-                    </div>
-                    {statWarnings.filter(w => w.critical).map((w, i) => (
-                      <p key={i} className="text-[10px] text-red-300 leading-snug">{w.message}</p>
-                    ))}
-                  </div>
-                )}
-
-                {/* REALITY Rules Parsed Display */}
-                {realityRules.length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="text-purple-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <i className="fa-solid fa-eye text-[10px]"></i>
-                      现实法则解析
-                    </h3>
-                    <div className="space-y-2">
-                      {realityRules.map(rule => {
-                        const isTriggeredNow = triggeredMap.has(rule.id);
-                        return (
-                          <div 
-                            key={rule.id} 
-                            className={`p-2 rounded border text-[11px] leading-snug transition-all ${
-                              isTriggeredNow 
-                                ? 'bg-purple-900/40 border-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.3)]' 
-                                : 'bg-[#1a0a1a]/50 border-purple-900/40'
-                            }`}
-                          >
-                            <div className="flex items-center gap-1 mb-0.5">
-                              <i className="fa-solid fa-scale-balanced text-purple-400 text-[9px]"></i>
-                              <span className="font-bold text-purple-300">{rule.title}</span>
-                              {isTriggeredNow && (
-                                <span className="ml-auto text-[9px] bg-purple-600 text-white px-1 py-0.5 rounded">生效中</span>
-                              )}
-                            </div>
-                            <p className="text-purple-200/70">{rule.description}</p>
-                            {isTriggeredNow && triggeredMap.get(rule.id) && (
-                              <p className="text-yellow-300/80 mt-1 italic text-[10px]">
-                                <i className="fa-solid fa-bolt text-[8px] mr-0.5"></i>
-                                {triggeredMap.get(rule.id)!.reason}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                <RealityMappingPanel
+                  rules={rules}
+                  realityStats={realityStats}
+                  parsedMappings={parsedMappings}
+                  triggeredMap={triggeredMap}
+                />
             </div>
           </div>
         </div>
@@ -484,6 +397,16 @@ const App: React.FC = () => {
              </button>
           </div>
 
+          <div className="mx-4 md:hidden mt-3">
+            <RealityMappingPanel
+              rules={rules}
+              realityStats={realityStats}
+              parsedMappings={parsedMappings}
+              triggeredMap={triggeredMap}
+              isMobile
+            />
+          </div>
+
           {/* Triggered Rules Banner */}
           {currentTriggeredRules.length > 0 && !loading && (
             <div className="shrink-0 mx-4 md:mx-8 mb-2 p-2 bg-yellow-900/20 border border-yellow-600/40 rounded-lg">
@@ -492,10 +415,15 @@ const App: React.FC = () => {
                   <i className="fa-solid fa-bolt text-[10px]"></i>本轮触发:
                 </span>
                 {currentTriggeredRules.map((tr, i) => (
-                  <span key={i} className="group relative inline-flex items-center text-xs bg-yellow-800/40 text-yellow-200 px-2 py-0.5 rounded border border-yellow-600/30 cursor-help">
+                  <span
+                    key={i}
+                    className="group relative inline-flex items-center text-xs bg-yellow-800/40 text-yellow-200 px-2 py-0.5 rounded border border-yellow-600/30 cursor-help"
+                    onMouseEnter={() => setHoveredTriggeredRuleId(tr.ruleId)}
+                    onMouseLeave={() => setHoveredTriggeredRuleId(null)}
+                  >
                     {tr.ruleTitle}
                     {/* Inline hover tooltip */}
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#1a0505] border border-yellow-500/50 rounded text-[10px] text-paper leading-snug opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#1a0505] border border-yellow-500/50 rounded text-[10px] text-paper leading-snug opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-150 z-50 shadow-xl">
                       <span className="text-yellow-400 font-bold block mb-0.5">触发原因:</span>
                       {tr.reason}
                       <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1a0505] border-r border-b border-yellow-500/50 transform rotate-45"></span>
@@ -586,11 +514,21 @@ const App: React.FC = () => {
             </h2>
             
             <div className="flex-1 overflow-y-auto pr-1 scrollbar-hide space-y-3">
-               {rules.filter(r => r.active).map(rule => (
+               {rules
+                 .filter((rule) => rule.active)
+                 .sort((a, b) => {
+                   const aTriggered = triggeredMap.has(a.id) ? 1 : 0;
+                   const bTriggered = triggeredMap.has(b.id) ? 1 : 0;
+                   return bTriggered - aTriggered;
+                 })
+                 .map((rule) => (
                   <RuleCardComponent 
                     key={rule.id} 
                     rule={rule} 
                     triggeredInfo={triggeredMap.get(rule.id)}
+                    parsedMapping={parsedMappingMap.get(rule.id)}
+                    autoShowToken={autoTooltipToken}
+                    isHighlighted={hoveredTriggeredRuleId === rule.id}
                   />
                ))}
                
