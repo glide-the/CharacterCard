@@ -10,9 +10,9 @@
 
    **⚠️ 重要：跨仓库部署的特殊权限要求**
 
-   本项目使用跨仓库部署（`external_repository: dmeck1/dmeck1.github.io`），因此 DEPLOY_TOKEN 必须满足以下要求：
+   本项目使用跨仓库部署（`external_repository: glide-the/glide-the.github.io`），因此 DEPLOY_TOKEN 必须满足以下要求：
 
-   - ✅ **对目标仓库 `dmeck1/dmeck1.github.io` 有写权限**
+   - ✅ **对目标仓库 `glide-the/glide-the.github.io` 有写权限**
    - ✅ **必须将目标仓库加入 token 的授权列表**（如果是 Fine-grained token）
 
    ### 创建步骤：
@@ -42,12 +42,12 @@
    3. 填写信息：
       - **Name**: `CharacterCard-Page Deploy Token`
       - **Expiration**: 选择过期时间
-      - **Description**: `Auto-deploy to dmeck1.github.io`
+      - **Description**: `Auto-deploy to glide-the/glide-the.github.io`
    4. **资源授权**（Repository access）：
       - 选择 **"Only select repositories"**
       - **必须同时添加两个仓库**：
         - ✅ `CharacterCard-Page`（源仓库）
-        - ✅ `dmeck1.github.io`（目标仓库）← **很重要！**
+        - ✅ `glide-the/glide-the.github.io`（目标仓库）← **很重要！**
    5. **权限设置**（Permissions）：
       - ✅ **Contents**: **Read and write**
       - ✅ **Deployments**: **Read and write**（如果有）
@@ -64,8 +64,8 @@
    - 点击 **"Add secret"**
 
 3. **验证目标仓库权限**
-   - 确认你对 `dmeck1.github.io` 仓库有 **Admin** 或 **Write** 权限
-   - 访问：https://github.com/dmeck1/dmeck1.github.io/settings/collaboration
+   - 确认你对 `glide-the/glide-the.github.io` 仓库有 **Admin** 或 **Write** 权限
+   - 访问：https://github.com/glide-the/glide-the.github.io/settings/collaboration
    - 如果没有权限，需要在目标仓库设置中添加自己为协作者
 
 ### 工作流程
@@ -82,7 +82,7 @@
   - `.github/workflows/deploy.yml`
 
 部署目标：
-- 仓库：`dmeck1/dmeck1.github.io`
+- 仓库：`glide-the/glide-the.github.io`
 - 分支：`main`
 
 ### 手动触发
@@ -103,7 +103,7 @@ npm run build -- --outDir=./dist
 
 - 确保 `GEMINI_API_KEY` secret 也已配置（如果项目需要）
 - 首次部署可能需要几分钟时间
-- 部署完成后访问 https://dmeck1.github.io/ 查看结果
+- 部署完成后访问 https://glide-the/glide-the.github.io/ 查看结果
 
 ---
 
@@ -113,8 +113,8 @@ npm run build -- --outDir=./dist
 
 **错误信息：**
 ```
-remote: Permission to dmeck1/dmeck1.github.io.git denied to dmeck1.
-fatal: unable to access 'https://github.com/dmeck1/dmeck1.github.io.git/': The requested URL returned error: 403
+remote: Permission to glide-the/glide-the.github.io.git denied to dmeck1.
+fatal: unable to access 'https://github.com/glide-the/glide-the.github.io.git/': The requested URL returned error: 403
 Error: Action failed with "The process '/usr/bin/git' failed with exit code 128"
 ```
 
@@ -125,7 +125,7 @@ Error: Action failed with "The process '/usr/bin/git' failed with exit code 128"
 
 1. **检查 Token 类型**
    - 如果使用 **Fine-grained Token**：
-     - 必须在 **Repository access** 中添加目标仓库 `dmeck1.github.io`
+     - 必须在 **Repository access** 中添加目标仓库 `glide-the/glide-the.github.io`
      - **Contents** 权限必须设置为 **Read and write**
    - 如果使用 **Classic Token**：
      - 必须勾选 `repo` 完整权限
@@ -133,7 +133,7 @@ Error: Action failed with "The process '/usr/bin/git' failed with exit code 128"
 2. **验证目标仓库权限**
    ```bash
    # 检查你对目标仓库的权限
-   # 访问：https://github.com/dmeck1/dmeck1.github.io/settings/collaboration
+   # 访问：https://github.com/glide-the/glide-the.github.io/settings/collaboration
    ```
    - 确保你的账号有 **Admin** 或 **Write** 权限
    - 如果是组织仓库，联系组织管理员
@@ -235,7 +235,7 @@ Please make sure you have the correct access rights and the repository exists.
               │ DEPLOY_TOKEN (需要有目标仓库写权限)
               ▼
 ┌─────────────────────────────┐
-│  dmeck1.github.io      │
+│  glide-the/glide-the.github.io      │
 │  (目标仓库/GitHub Pages)     │
 │                             │
 │  - 接收构建产物             │

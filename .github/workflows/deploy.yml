@@ -47,11 +47,11 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Deploy to dmeck1.github.io
+      - name: Deploy to glide-the/glide-the.github.io
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.DEPLOY_TOKEN }}
-          external_repository: dmeck1/dmeck1.github.io
+          external_repository: glide-the/glide-the.github.io
           publish_dir: ./dist
           publish_branch: main
           user_name: 'github-actions[bot]'
