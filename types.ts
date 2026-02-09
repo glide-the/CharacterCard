@@ -31,6 +31,26 @@ export interface RuleCard {
   effect?: string;
 }
 
+export type StatKey = 'credibility' | 'stress' | 'connections';
+
+export type RuleTooltipMode = 'triggered' | 'active' | 'inactive';
+
+export interface ParsedRuleLink {
+  statKey: StatKey;
+  statLabel: string;
+  currentValue: number;
+  threshold: number | null;
+  direction: 'below' | 'above' | 'none';
+  isTriggered: boolean;
+  warningMessage: string;
+}
+
+export interface ParsedRuleMapping {
+  rule: RuleCard;
+  linkedStats: ParsedRuleLink[];
+  isAnyTriggered: boolean;
+}
+
 export interface StoryChoice {
   id: string;
   text: string;
