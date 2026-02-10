@@ -1,4 +1,4 @@
-import { Character, RuleCard, StoryNode } from './types';
+import { Character, RuleCard, StoryNode, TurnAIConfig } from './types';
 
 // Updated with high-fidelity, reliable artistic references matching the "Tarot/Dark Fantasy" aesthetic.
 export const CHARACTERS: Character[] = [
@@ -197,4 +197,55 @@ export const INTRO_STORY: StoryNode = {
       risk: "疾病"
     }
   ]
+};
+
+export const DEFAULT_TASK_CONFIGS: TurnAIConfig['tasks'] = {
+  narrative: {
+    geminiModel: 'gemini-2.5-flash-preview-05-20',
+    openaiModel: 'gpt-4.1-mini',
+    temperature: 0.75,
+    maxOutputTokens: 1024,
+    topP: 0.95,
+    jsonMode: false,
+    streaming: true,
+    timeoutMs: 30_000,
+    maxRetries: 1,
+    retryDelayMs: 1_000,
+  },
+  realityMapping: {
+    geminiModel: 'gemini-2.5-flash-preview-05-20',
+    openaiModel: 'gpt-4.1-mini',
+    temperature: 0.3,
+    maxOutputTokens: 512,
+    topP: 0.85,
+    jsonMode: true,
+    streaming: false,
+    timeoutMs: 15_000,
+    maxRetries: 2,
+    retryDelayMs: 800,
+  },
+  worldRules: {
+    geminiModel: 'gemini-2.5-flash-preview-05-20',
+    openaiModel: 'gpt-4.1-mini',
+    temperature: 0.3,
+    maxOutputTokens: 768,
+    topP: 0.85,
+    jsonMode: true,
+    streaming: false,
+    timeoutMs: 15_000,
+    maxRetries: 2,
+    retryDelayMs: 800,
+  },
+  choices: {
+    geminiModel: 'gemini-2.5-flash-preview-05-20',
+    openaiModel: 'gpt-4.1-mini',
+    temperature: 0.9,
+    maxOutputTokens: 512,
+    topP: 0.95,
+    jsonMode: true,
+    streaming: false,
+    timeoutMs: 15_000,
+    maxRetries: 2,
+    retryDelayMs: 800,
+  },
 };

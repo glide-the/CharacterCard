@@ -1,3 +1,4 @@
+import type { TaskAIConfig } from "../types";
 import { GoogleGenAI, Schema, Type } from "@google/genai";
 import OpenAI from "openai";
 
@@ -222,7 +223,8 @@ function schemaToPromptDescription(geminiSchema: Schema, indent = 0): string {
  */
 export const generateContent = async (
   config: AIProviderConfig,
-  request: CompletionRequest
+  request: CompletionRequest,
+  taskConfig?: TaskAIConfig
 ): Promise<string> => {
   validateConfig(config);
 
@@ -233,6 +235,12 @@ export const generateContent = async (
     
     const geminiConfig: any = {
       systemInstruction: request.systemInstruction,
+      ...(taskConfig ? {
+        temperature: taskConfig.temperature,
+        maxOutputTokens: taskConfig.maxOutputTokens,
+        topP: taskConfig.topP,
+        topK: taskConfig.topK,
+      } : {}),
     };
 
     if (request.jsonMode) {
@@ -244,7 +252,7 @@ export const generateContent = async (
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: taskConfig?.geminiModel || 'gemini-2.5-flash-preview-05-20',
         contents: request.prompt,
         config: geminiConfig
       });
@@ -284,7 +292,12 @@ export const generateContent = async (
     try {
       const requestOptions: any = {
         messages,
-        model: config.openai.model || 'gpt-4-turbo-preview',
+        model: taskConfig?.openaiModel || config.openai.model || 'gpt-4-turbo-preview',
+        ...(taskConfig ? {
+          temperature: taskConfig.temperature,
+          max_tokens: taskConfig.maxOutputTokens,
+          top_p: taskConfig.topP,
+        } : {}),
       };
 
       const completion = await client.chat.completions.create(requestOptions);
@@ -311,7 +324,8 @@ export const generateContent = async (
  */
 export async function* generateStream(
   config: AIProviderConfig,
-  request: CompletionRequest
+  request: CompletionRequest,
+  taskConfig?: TaskAIConfig
 ): AsyncGenerator<string> {
   validateConfig(config);
 
@@ -321,10 +335,16 @@ export async function* generateStream(
     const ai = new GoogleGenAI({ apiKey });
 
     const streamResp = await ai.models.generateContentStream({
-      model: 'gemini-3-flash-preview',
+      model: taskConfig?.geminiModel || 'gemini-2.5-flash-preview-05-20',
       contents: request.prompt,
       config: {
         systemInstruction: request.systemInstruction,
+        ...(taskConfig ? {
+          temperature: taskConfig.temperature,
+          maxOutputTokens: taskConfig.maxOutputTokens,
+          topP: taskConfig.topP,
+          topK: taskConfig.topK,
+        } : {}),
       }
     });
 
@@ -349,9 +369,14 @@ export async function* generateStream(
     messages.push({ role: "user", content: request.prompt });
 
     const stream = await client.chat.completions.create({
-      model: config.openai.model || 'gpt-4-turbo-preview',
+      model: taskConfig?.openaiModel || config.openai.model || 'gpt-4-turbo-preview',
       messages,
       stream: true,
+      ...(taskConfig ? {
+        temperature: taskConfig.temperature,
+        max_tokens: taskConfig.maxOutputTokens,
+        top_p: taskConfig.topP,
+      } : {}),
     });
 
     for await (const chunk of stream) {
@@ -360,4 +385,31 @@ export async function* generateStream(
     }
     return;
   }
+}
+
+
+export async function executeWithRetry<T>(
+  fn: () => Promise<T>,
+  taskConfig: TaskAIConfig
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= taskConfig.maxRetries; attempt++) {
+    try {
+      const result = await Promise.race([
+        fn(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Task timeout')), taskConfig.timeoutMs)
+        ),
+      ]);
+      return result;
+    } catch (error) {
+      lastError = error as Error;
+      if (attempt < taskConfig.maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, taskConfig.retryDelayMs));
+      }
+    }
+  }
+
+  throw lastError || new Error('All retries exhausted');
 }
