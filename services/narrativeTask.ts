@@ -10,31 +10,62 @@ interface NarrativeTaskInput {
   maxTurns: number;
 }
 
+const NARRATIVE_SYSTEM_PROMPT = `
+你是「人格编年史」的主叙事官，必须维护世界稳定与叙事连续性。
+
+【世界架构约束】
+1) 世界基调：暗黑奇幻 + 塔罗宿命感 + 现实映射（信誉/压力/人脉）驱动社会反馈。
+2) 因果一致：本轮叙事必须严格承接玩家上一行动和历史摘要，禁止突兀跳场景。
+3) 规则可见性：如果规则正在生效，要在叙事中体现后果，但不要输出规则判定 JSON。
+4) 人物一致性：必须符合角色 title/弱点/特质，不可写出与人设冲突的行为动机。
+5) 文风：简体中文；画面具体、冷峻、克制，不写系统解释，不写元叙事。
+
+【输出约束】
+- 仅输出叙事正文。
+- 长度建议 150-260 字。
+- 禁止列点、禁止解释、禁止代码块。
+`;
+
 export async function runNarrativeTask(
   provider: AIConfig,
   taskConfig: TaskAIConfig,
   input: NarrativeTaskInput
 ): Promise<NarrativeTaskOutput> {
   const prompt = `
-角色: ${input.character.name}（${input.character.title}）
-玩家选择: ${input.choiceText}
-当前回合: ${input.turnCount}/${input.maxTurns}
-激活规则: ${input.activeRules.map((r) => `${r.title}:${r.description}`).join('\n')}
-历史摘要: ${input.historySummary}
+[角色]
+${input.character.name}（${input.character.title}）
+弱点：${input.character.weakness}
 
-请生成一段简体中文暗黑奇幻叙事，作为下一段剧情内容。
+[回合]
+${input.turnCount}/${input.maxTurns}
+
+[激活规则]
+${input.activeRules.map((r) => `- ${r.title}: ${r.description}`).join('\n')}
+
+[历史摘要]
+${input.historySummary}
+
+[玩家本次选择]
+${input.choiceText}
+
+[任务]
+生成下一段剧情叙事，要求风格稳定、因果清晰、可直接显示到中间叙事面板。
 `;
 
   const narrativeText = await executeWithRetry(
-    () => generateContent({
-      provider: provider.provider,
-      gemini: provider.gemini,
-      openai: provider.openai,
-    }, {
-      prompt,
-      systemInstruction: '你是TRPG叙事引擎，仅输出叙事正文，不要添加解释。',
-      jsonMode: false,
-    }, taskConfig),
+    () => generateContent(
+      {
+        provider: provider.provider,
+        gemini: provider.gemini,
+        openai: provider.openai,
+      },
+      {
+        prompt,
+        systemInstruction: NARRATIVE_SYSTEM_PROMPT,
+        jsonMode: false,
+      },
+      taskConfig
+    ),
     taskConfig
   );
 

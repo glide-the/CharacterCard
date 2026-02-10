@@ -18,6 +18,9 @@ import {
 import { DEFAULT_TASK_CONFIGS, INITIAL_RULES, INTRO_STORY } from "../constants";
 
 const localStorageStorage = createJSONStorage(() => localStorage);
+export const DEFAULT_TASK_CONFIG_SCOPE = "__default__";
+
+type TaskConfigMap = Record<string, TurnAIConfig['tasks']>;
 
 export interface GameStoreState extends GameState {
   loading: boolean;
@@ -33,7 +36,8 @@ export interface GameStoreState extends GameState {
   provider: ServiceProvider;
   geminiKey: string;
   openaiConfig: OpenAIConfig;
-  taskConfigs: TurnAIConfig['tasks'];
+  taskConfigScopeId: string;
+  taskConfigsByCharacter: TaskConfigMap;
 }
 
 export interface GameStoreActions {
@@ -63,10 +67,18 @@ export interface GameStoreActions {
   setProvider: (provider: ServiceProvider) => void;
   setGeminiKey: (key: string) => void;
   setOpenaiConfig: (config: OpenAIConfig | ((prev: OpenAIConfig) => OpenAIConfig)) => void;
+  setTaskConfigScopeId: (scopeId: string) => void;
   setTaskConfigs: (configs: TurnAIConfig['tasks']) => void;
   updateTaskConfig: (taskName: TaskName, patch: Partial<TaskAIConfig>) => void;
   resetTaskConfigs: () => void;
 }
+
+const cloneDefaultTaskConfigs = (): TurnAIConfig['tasks'] => ({
+  narrative: { ...DEFAULT_TASK_CONFIGS.narrative },
+  realityMapping: { ...DEFAULT_TASK_CONFIGS.realityMapping },
+  worldRules: { ...DEFAULT_TASK_CONFIGS.worldRules },
+  choices: { ...DEFAULT_TASK_CONFIGS.choices },
+});
 
 const initialState: GameStoreState = {
   phase: Phase.SELECTION,
@@ -96,7 +108,15 @@ const initialState: GameStoreState = {
     baseUrl: 'https://api.openai.com/v1',
     model: 'gpt-4-turbo-preview'
   },
-  taskConfigs: DEFAULT_TASK_CONFIGS,
+  taskConfigScopeId: DEFAULT_TASK_CONFIG_SCOPE,
+  taskConfigsByCharacter: {
+    [DEFAULT_TASK_CONFIG_SCOPE]: cloneDefaultTaskConfigs(),
+  },
+};
+
+const resolveTaskConfigs = (state: GameStoreState): TurnAIConfig['tasks'] => {
+  const scope = state.taskConfigScopeId || state.character?.id || DEFAULT_TASK_CONFIG_SCOPE;
+  return state.taskConfigsByCharacter[scope] || state.taskConfigsByCharacter[DEFAULT_TASK_CONFIG_SCOPE] || cloneDefaultTaskConfigs();
 };
 
 export const gameStore = create<GameStoreState & GameStoreActions>()(
@@ -123,7 +143,15 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
       setRuleStatusMap: (statusMap) => set({ ruleStatusMap: statusMap }),
       setChoicesLoading: (loading) => set({ choicesLoading: loading }),
       updateGameState: (updater) => set((state) => updater(state as GameState)),
-      resetGame: () => set({ ...initialState, taskConfigs: DEFAULT_TASK_CONFIGS, showAiSettings: false }),
+      resetGame: () => set((state) => ({
+        ...initialState,
+        showAiSettings: false,
+        provider: state.provider,
+        geminiKey: state.geminiKey,
+        openaiConfig: state.openaiConfig,
+        taskConfigScopeId: state.taskConfigScopeId,
+        taskConfigsByCharacter: state.taskConfigsByCharacter,
+      })),
       startNewGame: (character) => set({
         phase: Phase.GAMEPLAY,
         character,
@@ -148,9 +176,33 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
       setProvider: (provider) => set({ provider }),
       setGeminiKey: (key) => set({ geminiKey: key }),
       setOpenaiConfig: (config) => set((state) => ({ openaiConfig: typeof config === 'function' ? config(state.openaiConfig) : config })),
-      setTaskConfigs: (configs) => set({ taskConfigs: configs }),
-      updateTaskConfig: (taskName, patch) => set((state) => ({ taskConfigs: { ...state.taskConfigs, [taskName]: { ...state.taskConfigs[taskName], ...patch } } })),
-      resetTaskConfigs: () => set({ taskConfigs: DEFAULT_TASK_CONFIGS }),
+      setTaskConfigScopeId: (scopeId) => set((state) => ({
+        taskConfigScopeId: scopeId,
+        taskConfigsByCharacter: state.taskConfigsByCharacter[scopeId]
+          ? state.taskConfigsByCharacter
+          : { ...state.taskConfigsByCharacter, [scopeId]: cloneDefaultTaskConfigs() },
+      })),
+      setTaskConfigs: (configs) => set((state) => ({
+        taskConfigsByCharacter: { ...state.taskConfigsByCharacter, [state.taskConfigScopeId]: configs },
+      })),
+      updateTaskConfig: (taskName, patch) => set((state) => ({
+        taskConfigsByCharacter: {
+          ...state.taskConfigsByCharacter,
+          [state.taskConfigScopeId]: {
+            ...(state.taskConfigsByCharacter[state.taskConfigScopeId] || cloneDefaultTaskConfigs()),
+            [taskName]: {
+              ...(state.taskConfigsByCharacter[state.taskConfigScopeId]?.[taskName] || cloneDefaultTaskConfigs()[taskName]),
+              ...patch,
+            },
+          },
+        },
+      })),
+      resetTaskConfigs: () => set((state) => ({
+        taskConfigsByCharacter: {
+          ...state.taskConfigsByCharacter,
+          [state.taskConfigScopeId]: cloneDefaultTaskConfigs(),
+        },
+      })),
     }),
     {
       name: "character-card-game-store",
@@ -169,7 +221,8 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
         provider: state.provider,
         geminiKey: state.geminiKey,
         openaiConfig: state.openaiConfig,
-        taskConfigs: state.taskConfigs,
+        taskConfigScopeId: state.taskConfigScopeId,
+        taskConfigsByCharacter: state.taskConfigsByCharacter,
       }),
     }
   )
@@ -198,8 +251,10 @@ export const useShowAiSettings = () => gameStore((s) => s.showAiSettings);
 export const useProvider = () => gameStore((s) => s.provider);
 export const useGeminiKey = () => gameStore((s) => s.geminiKey);
 export const useOpenaiConfig = () => gameStore((s) => s.openaiConfig);
-export const useTaskConfigs = () => gameStore((s) => s.taskConfigs);
-export const useTaskConfig = (taskName: TaskName) => gameStore((s) => s.taskConfigs[taskName]);
+export const useTaskConfigScopeId = () => gameStore((s) => s.taskConfigScopeId);
+export const useTaskConfigsByCharacter = () => gameStore((s) => s.taskConfigsByCharacter);
+export const useTaskConfigs = () => gameStore((s) => resolveTaskConfigs(s));
+export const useTaskConfig = (taskName: TaskName) => gameStore((s) => resolveTaskConfigs(s)[taskName]);
 
 export const useSetPhase = () => gameStore((s) => s.setPhase);
 export const useSetCharacter = () => gameStore((s) => s.setCharacter);
@@ -227,6 +282,7 @@ export const useSetShowAiSettings = () => gameStore((s) => s.setShowAiSettings);
 export const useSetProvider = () => gameStore((s) => s.setProvider);
 export const useSetGeminiKey = () => gameStore((s) => s.setGeminiKey);
 export const useSetOpenaiConfig = () => gameStore((s) => s.setOpenaiConfig);
+export const useSetTaskConfigScopeId = () => gameStore((s) => s.setTaskConfigScopeId);
 export const useSetTaskConfigs = () => gameStore((s) => s.setTaskConfigs);
 export const useUpdateTaskConfig = () => gameStore((s) => s.updateTaskConfig);
 export const useResetTaskConfigs = () => gameStore((s) => s.resetTaskConfigs);

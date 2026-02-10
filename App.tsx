@@ -49,6 +49,7 @@ import {
   useSetNarrativeLoading,
   useSetWorldRulesLoading,
   useSetChoicesLoading,
+  useSetTaskConfigScopeId,
 } from './store';
 
 const App: React.FC = () => {
@@ -93,6 +94,7 @@ const App: React.FC = () => {
   const setNarrativeLoading = useSetNarrativeLoading();
   const setWorldRulesLoading = useSetWorldRulesLoading();
   const setChoicesLoading = useSetChoicesLoading();
+  const setTaskConfigScopeId = useSetTaskConfigScopeId();
   const resetGame = useResetGame();
   const startNewGame = useStartNewGame();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -124,6 +126,7 @@ const App: React.FC = () => {
 
   const handleCharacterSelect = (char: Character) => {
     setCharacter(char);
+    setTaskConfigScopeId(char.id);
   };
 
   const handleStartGame = () => {
