@@ -83,6 +83,8 @@ export interface EngineResult {
   ruleUpdates: {
     add?: RuleCard[];
     removeIds?: string[];
+    activate?: string[];
+    deactivate?: string[];
   };
   triggeredRules?: TriggeredRule[]; // 本轮触发的规则及原因
   isGameOver: boolean;
@@ -139,4 +141,60 @@ export interface AIConfig {
     apiKey?: string;
   };
   openai?: OpenAIConfig;
+}
+
+export type TaskName = 'narrative' | 'realityMapping' | 'worldRules' | 'choices';
+
+export interface TaskAIConfig {
+  geminiModel?: string;
+  openaiModel?: string;
+  temperature: number;
+  maxOutputTokens: number;
+  topP?: number;
+  topK?: number;
+  jsonMode: boolean;
+  streaming: boolean;
+  timeoutMs: number;
+  maxRetries: number;
+  retryDelayMs: number;
+}
+
+export interface TurnAIConfig {
+  provider: AIConfig;
+  tasks: Record<TaskName, TaskAIConfig>;
+}
+
+export interface RealityMappingTaskOutput {
+  statUpdates: {
+    credibility: number;
+    stress: number;
+    connections: number;
+  };
+  statAnalysis: Array<{
+    statKey: StatKey;
+    newValue: number;
+    status: 'safe' | 'warning' | 'triggered';
+    threshold: number | null;
+    warningMessage: string;
+    reason: string;
+  }>;
+}
+
+export interface WorldRulesTaskOutput {
+  triggeredRules: TriggeredRule[];
+  ruleUpdates: {
+    activate: string[];
+    deactivate: string[];
+    add: RuleCard[];
+    removeIds: string[];
+  };
+  ruleStatusMap: Record<string, 'triggered' | 'active_not_triggered' | 'inactive'>;
+}
+
+export interface ChoicesTaskOutput {
+  choices: StoryChoice[];
+}
+
+export interface NarrativeTaskOutput {
+  narrativeText: string;
 }

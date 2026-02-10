@@ -7,6 +7,7 @@ interface Props {
   parsedMapping?: ParsedRuleMapping;
   autoShowToken?: number;
   isHighlighted?: boolean;
+  statusOverride?: 'triggered' | 'active_not_triggered' | 'inactive';
 }
 
 const RuleCard: React.FC<Props> = ({
@@ -14,7 +15,8 @@ const RuleCard: React.FC<Props> = ({
   triggeredInfo,
   parsedMapping,
   autoShowToken = 0,
-  isHighlighted = false
+  isHighlighted = false,
+  statusOverride
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [isAutoShowing, setIsAutoShowing] = useState(false);
@@ -61,10 +63,14 @@ const RuleCard: React.FC<Props> = ({
     }
   };
 
-  const tooltipMode: RuleTooltipMode = !rule.active
+  const tooltipMode: RuleTooltipMode = statusOverride === 'inactive'
     ? 'inactive'
-    : isTriggered
+    : statusOverride === 'triggered'
     ? 'triggered'
+    : !rule.active
+    ? 'inactive'
+    : isTriggered || statusOverride === 'active_not_triggered'
+    ? (statusOverride === 'active_not_triggered' ? 'active' : 'triggered')
     : 'active';
 
   const linkedStats = useMemo(() => parsedMapping?.linkedStats ?? [], [parsedMapping]);

@@ -7,7 +7,7 @@ import { AiSettingsModal } from './components/AiSettingsModal';
 import DecisionFlowPage from './components/DecisionFlowPage';
 import TurnCompleteToast from './components/TurnCompleteToast';
 import RealityMappingPanel from './components/RealityMappingPanel';
-import { processTurn } from './services/geminiService';
+import { orchestrateTurn } from './services/turnOrchestrator';
 import { parseRuleMappings } from './utils/ruleParser';
 import { mergeTriggeredRules } from './utils/ruleValidator';
 import {
@@ -39,6 +39,17 @@ import {
   useGeminiKey,
   useOpenaiConfig,
   useSetShowAiSettings,
+  useTaskConfigs,
+  useRealityAnalysis,
+  useRealityAnalysisLoading,
+  useRuleStatusMap,
+  useSetRealityAnalysis,
+  useSetRealityAnalysisLoading,
+  useSetRuleStatusMap,
+  useSetNarrativeLoading,
+  useSetWorldRulesLoading,
+  useSetChoicesLoading,
+  useSetTaskConfigScopeId,
 } from './store';
 
 const App: React.FC = () => {
@@ -60,6 +71,10 @@ const App: React.FC = () => {
   const geminiKey = useGeminiKey();
   const openaiConfig = useOpenaiConfig();
   const setShowAiSettings = useSetShowAiSettings();
+  const taskConfigs = useTaskConfigs();
+  const realityAnalysis = useRealityAnalysis();
+  const realityAnalysisLoading = useRealityAnalysisLoading();
+  const ruleStatusMap = useRuleStatusMap();
 
   // Actions
   const setPhase = useSetPhase();
@@ -73,6 +88,13 @@ const App: React.FC = () => {
   const setFinalSummary = useSetFinalSummary();
   const setLoading = useSetLoading();
   const setCurrentTriggeredRules = useSetCurrentTriggeredRules();
+  const setRealityAnalysis = useSetRealityAnalysis();
+  const setRealityAnalysisLoading = useSetRealityAnalysisLoading();
+  const setRuleStatusMap = useSetRuleStatusMap();
+  const setNarrativeLoading = useSetNarrativeLoading();
+  const setWorldRulesLoading = useSetWorldRulesLoading();
+  const setChoicesLoading = useSetChoicesLoading();
+  const setTaskConfigScopeId = useSetTaskConfigScopeId();
   const resetGame = useResetGame();
   const startNewGame = useStartNewGame();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -104,6 +126,7 @@ const App: React.FC = () => {
 
   const handleCharacterSelect = (char: Character) => {
     setCharacter(char);
+    setTaskConfigScopeId(char.id);
   };
 
   const handleStartGame = () => {
@@ -115,6 +138,10 @@ const App: React.FC = () => {
     if (!character || !currentStory) return;
     
     setLoading(true);
+    setNarrativeLoading(true);
+    setRealityAnalysisLoading(true);
+    setWorldRulesLoading(true);
+    setChoicesLoading(true);
 
     const historySummary = storyLog.map(n => n.text).join(' ').slice(-1000);
     
@@ -125,19 +152,34 @@ const App: React.FC = () => {
       openai: provider === 'openai' ? openaiConfig : undefined
     };
     
-    // 1. EXECUTE ENGINE with provider config
-    const result: EngineResult = await processTurn(
-      character,
-      rules.filter(r => r.active),
-      realityStats,
-      choiceText,
-      historySummary,
-      turnCount,
-      maxTurns,
-      providerConfig
-    );
+    let result: EngineResult | null = null;
+    try {
+      // 1. EXECUTE ORCHESTRATOR with provider config
+      const orchestratorResult = await orchestrateTurn({
+        character,
+        rules,
+        realityStats,
+        choiceText,
+        historySummary,
+        turnCount,
+        maxTurns,
+        config: { provider: providerConfig, tasks: taskConfigs }
+      });
+      result = orchestratorResult.engineResult;
 
-    setLoading(false);
+      setRealityAnalysis(orchestratorResult.realityAnalysis);
+      setRuleStatusMap(orchestratorResult.ruleStatusMap);
+    } finally {
+      setNarrativeLoading(false);
+      setRealityAnalysisLoading(false);
+      setWorldRulesLoading(false);
+      setChoicesLoading(false);
+      setLoading(false);
+    }
+
+    if (!result) {
+      return;
+    }
 
     // 2. PROCESS STATE UPDATES
     // A. Update Stats
@@ -154,13 +196,23 @@ const App: React.FC = () => {
 
     // B. Update Rules
     let newRules = [...rules];
+    if (result.ruleUpdates.deactivate?.length) {
+      const deactivateSet = new Set(result.ruleUpdates.deactivate);
+      newRules = newRules.map((rule) => (deactivateSet.has(rule.id) ? { ...rule, active: false } : rule));
+    }
+    if (result.ruleUpdates.activate?.length) {
+      const activateSet = new Set(result.ruleUpdates.activate);
+      newRules = newRules.map((rule) => (activateSet.has(rule.id) ? { ...rule, active: true } : rule));
+    }
     // Remove rules
     if (result.ruleUpdates.removeIds) {
         newRules = newRules.filter(r => !result.ruleUpdates.removeIds?.includes(r.id));
     }
-    // Add rules
+    // Add rules (avoid duplicate IDs)
     if (result.ruleUpdates.add) {
-        newRules = [...newRules, ...result.ruleUpdates.add];
+      const existing = new Set(newRules.map((r) => r.id));
+      const additions = result.ruleUpdates.add.filter((r) => !existing.has(r.id));
+      newRules = [...newRules, ...additions];
     }
 
     // C. Check Critical Failures (Client-side guardrails in addition to AI)
@@ -376,6 +428,8 @@ const App: React.FC = () => {
                   realityStats={realityStats}
                   parsedMappings={parsedMappings}
                   triggeredMap={triggeredMap}
+                  aiAnalysis={realityAnalysis}
+                  loading={realityAnalysisLoading}
                 />
             </div>
           </div>
@@ -403,6 +457,8 @@ const App: React.FC = () => {
               realityStats={realityStats}
               parsedMappings={parsedMappings}
               triggeredMap={triggeredMap}
+              aiAnalysis={realityAnalysis}
+              loading={realityAnalysisLoading}
               isMobile
             />
           </div>
@@ -514,12 +570,15 @@ const App: React.FC = () => {
             </h2>
             
             <div className="flex-1 overflow-y-auto pr-1 scrollbar-hide space-y-3">
-               {rules
-                 .filter((rule) => rule.active)
+               {[...rules]
                  .sort((a, b) => {
-                   const aTriggered = triggeredMap.has(a.id) ? 1 : 0;
-                   const bTriggered = triggeredMap.has(b.id) ? 1 : 0;
-                   return bTriggered - aTriggered;
+                   const getRank = (rule: typeof a) => {
+                     const status = ruleStatusMap[rule.id];
+                     if (status === 'triggered' || triggeredMap.has(rule.id)) return 3;
+                     if (status === 'active_not_triggered' || rule.active) return 2;
+                     return 1;
+                   };
+                   return getRank(b) - getRank(a);
                  })
                  .map((rule) => (
                   <RuleCardComponent 
@@ -529,6 +588,7 @@ const App: React.FC = () => {
                     parsedMapping={parsedMappingMap.get(rule.id)}
                     autoShowToken={autoTooltipToken}
                     isHighlighted={hoveredTriggeredRuleId === rule.id}
+                    statusOverride={ruleStatusMap[rule.id]}
                   />
                ))}
                

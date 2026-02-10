@@ -3,6 +3,13 @@ import { ParsedRuleMapping, RuleCard, StatKey, TriggeredRule } from '../types';
 import StatBarWithRules from './StatBarWithRules';
 
 interface Props {
+  aiAnalysis?: Array<{
+    statKey: StatKey;
+    status: 'safe' | 'warning' | 'triggered';
+    warningMessage: string;
+    reason: string;
+  }> | null;
+  loading?: boolean;
   rules: RuleCard[];
   realityStats: Record<StatKey, number>;
   parsedMappings: ParsedRuleMapping[];
@@ -38,7 +45,9 @@ const RealityMappingPanel: React.FC<Props> = ({
   parsedMappings,
   triggeredMap,
   className,
-  isMobile = false
+  isMobile = false,
+  aiAnalysis = null,
+  loading = false
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
@@ -60,6 +69,13 @@ const RealityMappingPanel: React.FC<Props> = ({
     [parsedMappings, triggeredMap]
   );
 
+
+  const analysisMap = useMemo(() => {
+    const m = new Map<StatKey, { status: 'safe' | 'warning' | 'triggered'; warningMessage: string; reason: string }>();
+    (aiAnalysis || []).forEach((item) => m.set(item.statKey, { status: item.status, warningMessage: item.warningMessage, reason: item.reason }));
+    return m;
+  }, [aiAnalysis]);
+
   const unlinkedActiveRules = useMemo(() => {
     const mappedRuleIds = new Set(
       parsedMappings.filter((mapping) => mapping.linkedStats.length > 0).map((mapping) => mapping.rule.id)
@@ -70,7 +86,8 @@ const RealityMappingPanel: React.FC<Props> = ({
   const miniBars = (
     <div className="grid grid-cols-3 gap-2">
       {statGroups.map((stat) => {
-        const hasTriggered = stat.linkedRules.some(
+        const aiStatus = analysisMap.get(stat.key)?.status;
+        const hasTriggered = aiStatus === 'triggered' || stat.linkedRules.some(
           (linked) => linked.isActive && linked.link.isTriggered
         );
         return (
@@ -94,6 +111,17 @@ const RealityMappingPanel: React.FC<Props> = ({
   const content = (
     <div className="space-y-4">
       <div className="space-y-4 bg-brown-800/30 p-3 rounded-lg border border-brown">
+        {loading && <div className="text-xs text-stone-gray">现实映射分析中...</div>}
+        {!loading && aiAnalysis && aiAnalysis.length > 0 && (
+          <div className="space-y-1 text-xs">
+            {aiAnalysis.map((item) => (
+              <div key={item.statKey} className="text-paper/80">
+                <span className="text-gold mr-1">{item.statKey}</span>
+                <span>{item.warningMessage || item.reason}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {statGroups.map((stat) => (
           <StatBarWithRules
             key={stat.key}
