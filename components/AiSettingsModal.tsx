@@ -94,6 +94,26 @@ export const AiSettingsModal: React.FC = () => {
             <div className="text-xs text-stone-gray mb-2">
               当前编辑：{scopeOptions.find((item) => item.id === scopeId)?.label || '未知作用域'}
             </div>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+              <label className="text-xs">Gemini 模型
+                <input
+                  type="text"
+                  value={config.geminiModel || ''}
+                  onChange={(e) => updateTaskConfig(activeTask, { geminiModel: e.target.value || undefined })}
+                  placeholder="gemini-2.5-flash-preview-05-20"
+                  className="w-full px-2 py-1 bg-brown-800/40 border"
+                />
+              </label>
+              <label className="text-xs">OpenAI 模型
+                <input
+                  type="text"
+                  value={config.openaiModel || ''}
+                  onChange={(e) => updateTaskConfig(activeTask, { openaiModel: e.target.value || undefined })}
+                  placeholder="gpt-4.1-mini"
+                  className="w-full px-2 py-1 bg-brown-800/40 border"
+                />
+              </label>
+            </div>
             <div className="flex gap-2 flex-wrap mb-3">
               {(Object.keys(TASK_LABELS) as TaskName[]).map((task) => (
                 <button key={task} onClick={() => setActiveTask(task)} className={`px-3 py-1 border rounded ${activeTask === task ? 'border-gold text-gold' : 'border-brown-600 text-stone-gray'}`}>
@@ -113,6 +133,12 @@ export const AiSettingsModal: React.FC = () => {
               </label>
               <label className="text-xs">重试次数
                 <input type="number" value={config.maxRetries} onChange={(e) => updateTaskConfig(activeTask, { maxRetries: Number(e.target.value) })} className="w-full px-2 py-1 bg-brown-800/40 border" />
+              </label>
+              <label className="text-xs">Top P
+                <input type="number" step="0.01" value={config.topP ?? ''} onChange={(e) => updateTaskConfig(activeTask, { topP: e.target.value === '' ? undefined : Number(e.target.value) })} className="w-full px-2 py-1 bg-brown-800/40 border" />
+              </label>
+              <label className="text-xs">重试间隔(ms)
+                <input type="number" value={config.retryDelayMs} onChange={(e) => updateTaskConfig(activeTask, { retryDelayMs: Number(e.target.value) })} className="w-full px-2 py-1 bg-brown-800/40 border" />
               </label>
             </div>
             <button onClick={resetTaskConfigs} className="mt-3 text-xs underline text-paper/70">恢复当前作用域默认参数</button>
