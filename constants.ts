@@ -112,7 +112,7 @@ export const INITIAL_RULES: RuleCard[] = [
     id: 'r4',
     title: '墨菲定律',
     type: 'RISK',
-    description: '如果一个计划依赖于超过2个步骤，第3个步骤将会失败。',
+    description: '如果一个计划依赖于超过2个步骤，第3个步骤将会失败；按兵不动可暂时规避该法则风险。',
     active: true
   },
   {

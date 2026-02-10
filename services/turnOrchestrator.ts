@@ -33,7 +33,7 @@ export interface OrchestratorTurnResult {
 
 const defaultChoices: StoryChoice[] = [
   { id: 'retry', text: '重试当前计划', consequence: '谨慎推进' },
-  { id: 'wait', text: '暂时观察局势', consequence: '等待变化' },
+  { id: 'hold', text: '按兵不动', consequence: '观察局势变化并保留余地', risk: '可能错失先机' },
   { id: 'risk', text: '孤注一掷', consequence: '高风险突破' },
 ];
 
@@ -50,11 +50,17 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
       maxTurns: input.maxTurns,
     });
 
+
+    const narrativeText = narrative.narrativeText?.trim();
+    if (!narrativeText) {
+      throw new Error('Narrative task returned empty narrative text');
+    }
+
     const [realityResult, worldRulesResult, choicesResult] = await Promise.all([
       runRealityMappingTask(input.config.provider, taskConfigs.realityMapping, {
         character: input.character,
         choiceText: input.choiceText,
-        narrativeText: narrative.narrativeText,
+        narrativeText: narrativeText,
         stats: input.realityStats,
         activeRules: input.rules.filter((r) => r.active),
       }).catch(() => ({
@@ -63,7 +69,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
       })),
       runWorldRulesTask(input.config.provider, taskConfigs.worldRules, {
         choiceText: input.choiceText,
-        narrativeText: narrative.narrativeText,
+        narrativeText: narrativeText,
         rules: input.rules,
         turnCount: input.turnCount,
       }).catch(() => ({
@@ -72,7 +78,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
         ruleStatusMap: {},
       })),
       runChoicesTask(input.config.provider, taskConfigs.choices, {
-        narrativeText: narrative.narrativeText,
+        narrativeText: narrativeText,
         historySummary: input.historySummary,
       }).catch(() => ({ choices: defaultChoices })),
     ]);
@@ -82,7 +88,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
     return {
       engineResult: {
         storyNode: {
-          text: narrative.narrativeText || '迷雾笼罩，命运迟疑。',
+          text: narrativeText,
           choices: isFinalTurn ? [] : (choicesResult.choices?.length ? choicesResult.choices : defaultChoices),
         },
         statUpdates: realityResult.statUpdates || { credibility: 0, stress: 0, connections: 0 },
