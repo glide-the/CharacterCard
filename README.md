@@ -21,6 +21,59 @@
 
 ---
 
+## 📋 版本说明
+
+### v2.0.0 — 4-Task 串并联架构（2026-02-10）
+
+> 将 AI 回合处理从单体模式重构为「叙事优先 → 三翼并行」的 4-Task 调度架构。
+
+**架构变更**
+- **Phase A**：Task 3（纯叙事生成）最先执行，支持 streaming 逐字渲染
+- **Phase B**：叙事完成后并行触发 Task 1（现实映射）+ Task 2（世界法则）+ Task 4（选项生成）
+- 新增 `turnOrchestrator.ts` 串并联调度层，使用 `Promise.allSettled` 并行容错
+
+**新增模块**
+| 文件 | 说明 |
+|------|------|
+| `services/turnOrchestrator.ts` | 串并联调度层 + 结果合并 + fallback |
+| `services/narrativeTask.ts` | AI Task 3：纯叙事生成（Phase A, streaming） |
+| `services/realityMappingTask.ts` | AI Task 1：现实映射规则解析（Phase B-1, JSON） |
+| `services/worldRulesTask.ts` | AI Task 2：世界法则触发判定（Phase B-2, JSON） |
+| `services/choicesTask.ts` | AI Task 4：回合选项生成（Phase B-3, JSON） |
+
+**Task 级 AI 配置**
+- 新增 `TaskAIConfig` / `TurnAIConfig` 接口，每个 Task 独立配置 temperature / model / timeout / retries
+- 新增 `DEFAULT_TASK_CONFIGS` 预设常量（叙事 temp=0.75, 映射/法则 temp=0.3, 选项 temp=0.9）
+- AI 设置弹窗新增 Task 参数 Tab，支持按角色保存配置
+
+**容错降级**
+- Task 3 失败 → 通用错误叙事 + Phase B 空上下文继续
+- Task 1 失败 → 客户端 `ruleParser.ts` 降级（statUpdates 全 0）
+- Task 2 失败 → 客户端 `ruleValidator.ts` 降级（仅硬阈值）
+- Task 4 失败 → 3 个默认通用选项
+- 全链路失败 → 回退 `geminiService.processTurn()` 单体模式
+
+**UI 增强**
+- 中间面板：叙事 streaming 逐字呈现 → 选项独立 loading
+- 左侧面板：属性 safe(绿) / warning(黄) / triggered(红) 三色编码 + 变化原因
+- 右侧面板：规则 triggered(⚡黄) / active(绿) / inactive(灰) / new(✨紫) 四态渲染
+
+**Store 扩展**
+- 新增四路独立 loading 状态（`narrativeLoading` / `realityAnalysisLoading` / `worldRulesLoading` / `choicesLoading`）
+- 新增 `ruleStatusMap` / `realityAnalysis` / `narrativeStreamBuffer`
+- `taskConfigsByCharacter` 支持按角色持久化 AI 配置
+
+> 详细设计文档见 [docs/design/](docs/design/) | 运营文档见 [docs/运营文档-4Task架构重构.md](docs/运营文档-4Task架构重构.md)
+
+### v1.0.0 — 初始版本
+
+- 单体 `geminiService.processTurn()` 单次 AI 调用完成全部逻辑
+- 支持 Gemini / OpenAI 双 Provider
+- 8 个可选暗黑奇幻角色 + 动态规则卡牌系统
+- Zustand + localStorage 游戏状态持久化
+
+---
+
 ## ✨ 特性
 
 ### 🎮 游戏核心
@@ -152,20 +205,34 @@ pnpm preview
 
 ```
 CharacterCard/
-├── components/           # React 组件
-│   ├── AiSettingsModal.tsx   # AI 配置界面
-│   ├── CharacterCard.tsx     # 角色卡牌组件
-│   └── RuleCard.tsx          # 规则卡牌组件
-├── services/            # 服务层
-│   ├── aiEngine.ts          # AI 引擎核心逻辑
-│   └── geminiService.ts     # AI 服务接口
-├── store/               # 状态管理
-│   └── index.ts             # Zustand store
-├── App.tsx              # 应用主组件
-├── constants.ts         # 游戏常量配置
-├── types.ts            # TypeScript 类型定义
-├── index.tsx           # 应用入口
-└── vite.config.ts      # Vite 配置
+├── components/               # React 组件
+│   ├── AiSettingsModal.tsx       # AI 配置界面（含 Task 级参数 Tab）
+│   ├── CharacterCard.tsx         # 角色卡牌组件
+│   ├── DecisionFlowPage.tsx      # 决策流程页面
+│   ├── RealityMappingPanel.tsx   # 左侧·现实映射面板（AI 分析结果渲染）
+│   ├── RuleCard.tsx              # 右侧·规则卡牌（四状态渲染）
+│   ├── StatBarWithRules.tsx      # 属性条（safe/warning/triggered 着色）
+│   └── TurnCompleteToast.tsx     # 回合完成提示
+├── services/                # 服务层
+│   ├── aiEngine.ts              # AI 引擎核心（支持 TaskAIConfig + executeWithRetry）
+│   ├── geminiService.ts         # 单体 AI 服务（保留为 fallback）
+│   ├── turnOrchestrator.ts      # ★ 串并联调度层（Phase A → Phase B）
+│   ├── narrativeTask.ts         # ★ Task 3：纯叙事生成（streaming）
+│   ├── realityMappingTask.ts    # ★ Task 1：现实映射规则解析
+│   ├── worldRulesTask.ts        # ★ Task 2：世界法则触发判定
+│   └── choicesTask.ts           # ★ Task 4：回合选项生成
+├── store/                   # 状态管理
+│   └── index.ts                 # Zustand store（四路 loading + taskConfigs）
+├── utils/                   # 工具层
+│   ├── ruleParser.ts            # 客户端规则解析（Task 1 降级用）
+│   └── ruleValidator.ts         # 客户端规则验证（Task 2 降级用）
+├── docs/                    # 文档
+│   └── design/                  # 6 份设计文档
+├── App.tsx                  # 应用主组件（orchestrateTurn 调度入口）
+├── constants.ts             # 游戏常量 + DEFAULT_TASK_CONFIGS
+├── types.ts                # 类型定义（含 TaskAIConfig / TurnAIConfig / TaskOutput）
+├── index.tsx               # 应用入口
+└── vite.config.ts          # Vite 配置
 ```
 
 ---
@@ -188,6 +255,9 @@ CharacterCard/
 
 - [部署指南](DEPLOYMENT.md) - GitHub Pages 自动部署配置
 - [迁移文档](MIGRATION.md) - 状态管理和 AI 引擎实现细节
+- [运营文档](docs/运营文档-4Task架构重构.md) - 4-Task 架构重构任务分解与交付计划
+- [决策流程设计](docs/design/决策流程设计.md) - 主架构文档（决策流程 + 4-Task 总览）
+- [Task 级 AI 配置](docs/design/task-ai-config.md) - 各 Task 的参数设计与逐文件扩展方案
 
 ---
 
