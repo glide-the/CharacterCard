@@ -100,6 +100,7 @@ const App: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTurnToast, setShowTurnToast] = useState(false);
   const [toastTurn, setToastTurn] = useState(0);
+  const [playerDirective, setPlayerDirective] = useState('');
   const [autoTooltipToken, setAutoTooltipToken] = useState(0);
   const [hoveredTriggeredRuleId, setHoveredTriggeredRuleId] = useState<string | null>(null);
   const [showRulesSheet, setShowRulesSheet] = useState(false);
@@ -170,6 +171,7 @@ const App: React.FC = () => {
         historySummary,
         turnCount,
         maxTurns,
+        playerDirective: playerDirective.trim() || undefined,
         config: { provider: providerConfig, tasks: taskConfigs }
       });
       result = orchestratorResult.engineResult;
@@ -275,6 +277,7 @@ const App: React.FC = () => {
     } else {
       setToastTurn(completedTurn);
       setShowTurnToast(true);
+      setPlayerDirective('');
     }
   };
 
@@ -540,6 +543,22 @@ const App: React.FC = () => {
                       </div>
                    </div>
                 ) : (
+                  <>
+                  <div className="max-w-3xl mx-auto mb-4">
+                    <label htmlFor="player-directive" className="block text-xs tracking-widest uppercase text-gold/80 mb-2 font-display">
+                      任务剧情要求（可选）
+                    </label>
+                    <textarea
+                      id="player-directive"
+                      value={playerDirective}
+                      onChange={(event) => setPlayerDirective(event.target.value)}
+                      placeholder="例如：我希望规则变化来自角色动机与前几回合因果，不要随机突变。"
+                      className="w-full min-h-[88px] p-3 rounded-lg bg-[#1f120d] border border-brown-600 text-paper placeholder:text-stone-gray/70 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/40 font-serif text-sm"
+                    />
+                    <p className="mt-2 text-xs text-stone-gray font-serif">
+                      系统会在本轮生成叙事与规则时优先参考你的要求，并尽量保证规则变化具有连续因果。
+                    </p>
+                  </div>
                   <div className="grid gap-4 max-w-3xl mx-auto">
                     {currentStory.choices.map((choice) => (
                       <button
@@ -564,6 +583,7 @@ const App: React.FC = () => {
                       </button>
                     ))}
                   </div>
+                  </>
                 )}
              </div>
           </div>

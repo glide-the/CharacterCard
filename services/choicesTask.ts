@@ -5,6 +5,7 @@ import { executeWithRetry, generateContent } from './aiEngine';
 interface ChoicesTaskInput {
   narrativeText: string;
   historySummary: string;
+  playerDirective?: string;
 }
 
 const schema = {
@@ -38,6 +39,7 @@ const CHOICES_SYSTEM_PROMPT = `
 - 每个选项必须与当前叙事直接相关，禁止脱离语境。
 
 【质量要求】
+0) 选项必须从当前叙事因果链推导，不允许看起来像从预设池随机抽取。
 1) text：10-30 字，简体中文，具体可执行。
 2) consequence：简洁后果提示，避免空泛。
 3) 尽量提供 cost/risk，帮助玩家做知情决策。
@@ -57,8 +59,12 @@ ${input.narrativeText}
 [历史摘要]
 ${input.historySummary}
 
+[玩家剧情要求]
+${input.playerDirective?.trim() || '（无额外要求）'}
+
 [任务]
 生成 3 个可执行且彼此差异化的后续选项。
+如果玩家提供剧情要求，至少 1 个选项要直接回应该要求。
 仅在剧情允许观望/等待/潜伏时，加入“暂不行动”策略选项。
 `;
 
