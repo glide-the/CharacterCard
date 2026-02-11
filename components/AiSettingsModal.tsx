@@ -57,13 +57,13 @@ export const AiSettingsModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-[#1a0f0f] border-4 border-double border-gold rounded-lg w-full max-w-2xl shadow-[0_0_50px_rgba(212,175,55,0.3)] overflow-hidden animate-fade-in">
-        <div className="p-4 border-b border-gold/30 flex items-center justify-between bg-velvet-red/20">
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
+      <div className="bg-[#1a0f0f] border-4 border-double border-gold rounded-lg w-full max-w-2xl shadow-[0_0_50px_rgba(212,175,55,0.3)] overflow-hidden animate-fade-in max-h-[calc(100vh-1rem)] sm:max-h-[90vh] flex flex-col">
+        <div className="p-4 border-b border-gold/30 flex items-center justify-between bg-velvet-red/20 shrink-0">
           <h3 className="font-display text-2xl text-gold"><i className="fa-solid fa-cog mr-2"></i>AI 设置</h3>
           <button onClick={onClose} className="text-gold/60 hover:text-gold"><i className="fa-solid fa-times text-xl"></i></button>
         </div>
-        <div className="p-6 space-y-5 bg-[#0f0303] max-h-[80vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-5 bg-[#0f0303] overflow-y-auto flex-1 min-h-0">
           <div>
             <label className="text-xs text-gold mb-1 block">配置作用域</label>
             <select
@@ -77,7 +77,7 @@ export const AiSettingsModal: React.FC = () => {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="p-3 border rounded cursor-pointer">
               <input type="radio" checked={provider === 'gemini'} onChange={() => setProvider('gemini')} className="mr-2"/>Gemini
             </label>
@@ -194,7 +194,7 @@ export const AiSettingsModal: React.FC = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="text-xs">Temperature
                 <input type="number" step="0.05" value={config.temperature} onChange={(e) => updateTaskConfig(activeTask, { temperature: Number(e.target.value) })} className="w-full px-2 py-1 bg-brown-800/40 border" />
               </label>
@@ -217,7 +217,7 @@ export const AiSettingsModal: React.FC = () => {
             <button onClick={resetTaskConfigs} className="mt-3 text-xs underline text-paper/70">恢复当前作用域默认参数</button>
           </div>
         </div>
-        <div className="p-4 bg-velvet-red/20 border-t border-gold/30 flex justify-end">
+        <div className="p-4 bg-velvet-red/20 border-t border-gold/30 flex justify-end shrink-0">
           <button onClick={onClose} className="px-6 py-2 bg-gold text-black font-bold">保存设置</button>
         </div>
       </div>
