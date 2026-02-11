@@ -2,11 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Phase, Character, EngineResult, TriggeredRule } from './types';
 import { CHARACTERS } from './constants';
 import CharacterCard from './components/CharacterCard';
-import RuleCardComponent from './components/RuleCard';
 import { AiSettingsModal } from './components/AiSettingsModal';
 import DecisionFlowPage from './components/DecisionFlowPage';
 import TurnCompleteToast from './components/TurnCompleteToast';
 import RealityMappingPanel from './components/RealityMappingPanel';
+import RulesDeckPanel from './components/RulesDeckPanel';
 import { orchestrateTurn } from './services/turnOrchestrator';
 import { parseRuleMappings } from './utils/ruleParser';
 import { mergeTriggeredRules } from './utils/ruleValidator';
@@ -102,6 +102,7 @@ const App: React.FC = () => {
   const [toastTurn, setToastTurn] = useState(0);
   const [autoTooltipToken, setAutoTooltipToken] = useState(0);
   const [hoveredTriggeredRuleId, setHoveredTriggeredRuleId] = useState<string | null>(null);
+  const [showRulesSheet, setShowRulesSheet] = useState(false);
   const parsedMappings = useMemo(
     () => parseRuleMappings(rules, realityStats),
     [rules, realityStats]
@@ -123,6 +124,12 @@ const App: React.FC = () => {
       setAutoTooltipToken((prev) => prev + 1);
     }
   }, [currentTriggeredRules]);
+
+  useEffect(() => {
+    if (phase !== Phase.GAMEPLAY) {
+      setShowRulesSheet(false);
+    }
+  }, [phase]);
 
   const handleCharacterSelect = (char: Character) => {
     setCharacter(char);
@@ -444,10 +451,17 @@ const App: React.FC = () => {
              </span>
              <button
                onClick={() => setPhase(Phase.DECISION_MAP)}
-               className="absolute right-4 top-1/2 -translate-y-1/2 p-2 border border-gold/60 text-gold rounded-full hover:bg-gold/10 transition-colors"
+               className="absolute right-16 top-1/2 -translate-y-1/2 p-2 border border-gold/60 text-gold rounded-full hover:bg-gold/10 transition-colors"
                title="查看决策流程"
              >
                <i className="fa-solid fa-route text-sm"></i>
+             </button>
+             <button
+               onClick={() => setShowRulesSheet(true)}
+               className="absolute right-4 top-1/2 -translate-y-1/2 p-2 border border-gold/60 text-gold rounded-full hover:bg-gold/10 transition-colors md:hidden"
+               title="查看法则"
+             >
+               <i className="fa-solid fa-book text-sm"></i>
              </button>
           </div>
 
@@ -556,61 +570,51 @@ const App: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN: Rules Deck (25%) */}
-        <div className="hidden md:flex flex-col w-1/4 bg-[#140404] border-l-4 border-brown-600 p-4 shadow-2xl z-10 h-screen">
-            <h2 className="text-gold font-display text-lg mb-4 border-b border-brown pb-2 flex justify-between items-center shrink-0">
-              <span>世界法则</span>
-              <div className="flex items-center gap-2">
-                {currentTriggeredRules.length > 0 && (
-                  <span className="text-[10px] bg-yellow-600 px-1.5 py-0.5 rounded text-black font-bold border border-yellow-400">
-                    <i className="fa-solid fa-bolt mr-0.5"></i>{currentTriggeredRules.length} 触发
-                  </span>
-                )}
-                <span className="text-xs bg-velvet-red px-2 py-0.5 rounded text-gold border border-gold">{rules.filter(r => r.active).length} 激活</span>
-              </div>
-            </h2>
-            
-            <div className="flex-1 overflow-y-auto pr-1 scrollbar-hide space-y-3">
-               {[...rules]
-                 .sort((a, b) => {
-                   const getRank = (rule: typeof a) => {
-                     const status = ruleStatusMap[rule.id];
-                     if (status === 'triggered' || triggeredMap.has(rule.id)) return 3;
-                     if (status === 'active_not_triggered' || rule.active) return 2;
-                     return 1;
-                   };
-                   return getRank(b) - getRank(a);
-                 })
-                 .map((rule) => (
-                  <RuleCardComponent 
-                    key={rule.id} 
-                    rule={rule} 
-                    triggeredInfo={triggeredMap.get(rule.id)}
-                    parsedMapping={parsedMappingMap.get(rule.id)}
-                    autoShowToken={autoTooltipToken}
-                    isHighlighted={hoveredTriggeredRuleId === rule.id}
-                    statusOverride={ruleStatusMap[rule.id]}
-                  />
-               ))}
-               
-               {rules.some(r => !r.active) && (
-                   <div className="text-center p-3 border border-dashed border-brown-600 opacity-50 rounded-lg">
-                       <p className="text-xs text-stone-gray">隐藏的规则在黑暗中沉睡...</p>
-                   </div>
-               )}
-            </div>
+        <RulesDeckPanel
+          className="hidden md:flex w-1/4 h-screen"
+          rules={rules}
+          currentTriggeredRules={currentTriggeredRules}
+          triggeredMap={triggeredMap}
+          parsedMappingMap={parsedMappingMap}
+          autoTooltipToken={autoTooltipToken}
+          hoveredTriggeredRuleId={hoveredTriggeredRuleId}
+          ruleStatusMap={ruleStatusMap}
+          onResetGame={resetGame}
+        />
 
-            <div className="mt-4 p-3 bg-brown-800/20 rounded border border-brown text-center shrink-0">
-                <i className="fa-solid fa-gear text-xl text-brown mb-1 animate-spin-slow opacity-50"></i>
-                <p className="text-[10px] text-stone-gray italic">"系统正在监听每一个抉择。"</p>
-                <button 
-                  onClick={resetGame}
-                  className="mt-2 text-xs text-paper/60 hover:text-gold transition-colors duration-300 underline underline-offset-2 decoration-dotted"
+        {showRulesSheet && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/60 z-40 md:hidden"
+              onClick={() => setShowRulesSheet(false)}
+              aria-hidden="true"
+            />
+            <div className="fixed inset-x-0 bottom-0 max-h-[75vh] z-50 md:hidden bg-[#140404] border-t-4 border-brown-600 rounded-t-2xl shadow-2xl overflow-hidden">
+              <div className="px-4 py-3 flex items-center justify-between border-b border-brown-700/60">
+                <h3 className="text-gold font-display tracking-wide">世界法则</h3>
+                <button
+                  onClick={() => setShowRulesSheet(false)}
+                  className="p-2 border border-gold/60 text-gold rounded-full hover:bg-gold/10 transition-colors"
+                  title="关闭法则面板"
                 >
-                  <i className="fa-solid fa-rotate-right mr-1"></i>
-                  清除数据重新开始
+                  <i className="fa-solid fa-xmark"></i>
                 </button>
+              </div>
+              <RulesDeckPanel
+                className="h-[calc(75vh-56px)]"
+                contentClassName="overflow-y-auto"
+                rules={rules}
+                currentTriggeredRules={currentTriggeredRules}
+                triggeredMap={triggeredMap}
+                parsedMappingMap={parsedMappingMap}
+                autoTooltipToken={autoTooltipToken}
+                hoveredTriggeredRuleId={hoveredTriggeredRuleId}
+                ruleStatusMap={ruleStatusMap}
+                onResetGame={resetGame}
+              />
             </div>
-        </div>
+          </>
+        )}
       </div>
     );
   };
