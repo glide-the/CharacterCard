@@ -33,7 +33,7 @@ const CHOICES_SYSTEM_PROMPT = `
 
 【目标】
 - 基于叙事场景输出 3 个差异化选项。
-- 其中至少一个选项必须是“按兵不动”或等价表达（谨慎观察/暂不行动）。
+- “暂不行动/按兵不动”仅在剧情存在观望窗口时出现；若出现，必须是唯一的减轻精神压力路径。
 - 选项必须具有明显策略差异（保守/均衡/冒险）。
 - 每个选项必须与当前叙事直接相关，禁止脱离语境。
 
@@ -59,7 +59,7 @@ ${input.historySummary}
 
 [任务]
 生成 3 个可执行且彼此差异化的后续选项。
-务必包含一个“按兵不动”策略选项。
+仅在剧情允许观望/等待/潜伏时，加入“暂不行动”策略选项。
 `;
 
   const response = await executeWithRetry(
@@ -80,14 +80,61 @@ ${input.historySummary}
 }
 
 
+const HOLD_CHOICE_MATCHER = /暂不行动|按兵不动|观望|等待/;
+
+function stripChoicePrefix(text: string): string {
+  return text.replace(/^([A-C]\.\s*)?/, '');
+}
+
 function normalizeChoices(output: ChoicesTaskOutput): ChoicesTaskOutput {
-  const choices = [...(output.choices || [])].slice(0, 3);
-  if (!choices.some((c) => c.text.includes('按兵不动') || c.text.includes('观察') || c.text.includes('暂不行动'))) {
-    if (choices.length >= 3) {
-      choices[0] = { id: choices[0].id || 'hold', text: '按兵不动', consequence: '先观察局势与规则变化', risk: '可能错失主动权' };
-    } else {
-      choices.push({ id: 'hold', text: '按兵不动', consequence: '先观察局势与规则变化', risk: '可能错失主动权' });
-    }
+  const baseChoices = [...(output.choices || [])].slice(0, 3);
+  const holdChoices = baseChoices.filter((choice) => HOLD_CHOICE_MATCHER.test(choice.text));
+  const nonHoldChoices = baseChoices.filter((choice) => !HOLD_CHOICE_MATCHER.test(choice.text));
+
+  while (nonHoldChoices.length < 3) {
+    nonHoldChoices.push({
+      id: `fallback_${nonHoldChoices.length + 1}`,
+      text: nonHoldChoices.length === 0
+        ? '谨慎试探局势'
+        : nonHoldChoices.length === 1
+          ? '稳步推进目标'
+          : '冒险强攻突破',
+      consequence: nonHoldChoices.length === 0
+        ? '小幅推进并收集信息'
+        : nonHoldChoices.length === 1
+          ? '维持节奏并争取主动'
+          : '快速突破，但风险上升',
+      risk: nonHoldChoices.length < 2 ? '收益有限' : '可能引发连锁后果'
+    });
   }
-  return { choices };
+
+  if (holdChoices.length === 0) {
+    return {
+      choices: nonHoldChoices.slice(0, 3).map((choice, idx) => ({
+        ...choice,
+        text: `${String.fromCharCode(65 + idx)}. ${stripChoicePrefix(choice.text)}`
+      }))
+    };
+  }
+
+  const selectedHold = holdChoices[0];
+  return {
+    choices: [
+      {
+        ...nonHoldChoices[0],
+        text: `A. ${stripChoicePrefix(nonHoldChoices[0].text)}`
+      },
+      {
+        ...nonHoldChoices[1],
+        text: `B. ${stripChoicePrefix(nonHoldChoices[1].text)}`
+      },
+      {
+        ...selectedHold,
+        id: selectedHold.id || 'hold',
+        text: 'C. 暂不行动',
+        consequence: selectedHold.consequence || '保持观望，尝试平复精神压力',
+        risk: selectedHold.risk || '可能错失主动权'
+      }
+    ]
+  };
 }

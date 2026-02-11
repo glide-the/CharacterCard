@@ -55,8 +55,15 @@ const REALITY_SYSTEM_PROMPT = `
 2) 每项 statUpdates 变化建议在 [-3, +3]，仅在叙事确有重大事件时使用极值。
 3) status 必须与 newValue 和阈值一致。
 4) warningMessage 与 reason 必须是简体中文，且能直接展示给玩家。
-5) 只输出 JSON，不输出解释文本。
+5) 精神压力（stress）与“精神损耗”是同一数值指标（仅名称不同）。
+6) 只有玩家选择“C. 暂不行动”时，stress 才允许出现负增量（减压）；其他任何行动都不得降低 stress。
+7) 只输出 JSON，不输出解释文本。
 `;
+
+const HOLD_CHOICE_KEYWORDS = ['C. 暂不行动', '暂不行动'];
+
+const isHoldChoice = (choiceText: string): boolean =>
+  HOLD_CHOICE_KEYWORDS.some((keyword) => choiceText.includes(keyword));
 
 export async function runRealityMappingTask(
   provider: AIConfig,
@@ -98,5 +105,21 @@ ${input.activeRules.map((r) => `- ${r.title}: ${r.description}`).join('\n')}
     taskConfig
   );
 
-  return JSON.parse(response) as RealityMappingTaskOutput;
+  return normalizeRealityMappingResult(JSON.parse(response) as RealityMappingTaskOutput, input);
+}
+
+function normalizeRealityMappingResult(
+  output: RealityMappingTaskOutput,
+  input: RealityMappingTaskInput
+): RealityMappingTaskOutput {
+  const normalized = { ...output, statUpdates: { ...output.statUpdates } };
+  const holdChoice = isHoldChoice(input.choiceText);
+
+  if (holdChoice) {
+    normalized.statUpdates.stress = Math.min(-1, normalized.statUpdates.stress);
+  } else {
+    normalized.statUpdates.stress = Math.max(0, normalized.statUpdates.stress);
+  }
+
+  return normalized;
 }
