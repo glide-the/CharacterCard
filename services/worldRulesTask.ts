@@ -57,7 +57,9 @@ const WORLD_RULES_SYSTEM_PROMPT = `
 4) removeIds 仅用于剧情上已彻底失效的规则。
 5) ruleStatusMap 应覆盖输入规则的所有 id。
 6) reason 需简体中文，可直接给玩家展示。
-7) 只输出 JSON。
+7) 优先保持规则系统简洁：若无必要，本回合不新增规则；避免叠加过多限制影响流程收束。
+8) 当剧情已进入后期或收束阶段，应减少限制性裁定，避免阻断正常结局推进。
+9) 只输出 JSON。
 `;
 
 export async function runWorldRulesTask(
