@@ -9,7 +9,7 @@ import {
   WorldRulesTaskOutput,
 } from '../types';
 import { processTurn } from './geminiService';
-import { runNarrativeTask } from './narrativeTask';
+import { runFinalSummaryTask, runNarrativeTask } from './narrativeTask';
 import { runRealityMappingTask } from './realityMappingTask';
 import { runWorldRulesTask } from './worldRulesTask';
 import { runChoicesTask } from './choicesTask';
@@ -89,6 +89,18 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
 
     const isFinalTurn = input.turnCount >= input.maxTurns;
 
+    let gameSummary: string | undefined;
+    if (isFinalTurn) {
+      gameSummary = await runFinalSummaryTask(input.config.provider, taskConfigs.narrative, {
+        character: input.character,
+        historySummary: input.historySummary,
+        finalNarrativeText: narrativeText,
+        activeRules: input.rules.filter((r) => r.active),
+        turnCount: input.turnCount,
+        maxTurns: input.maxTurns,
+      }).catch(() => '终局已至，命运尘埃落定。');
+    }
+
     return {
       engineResult: {
         storyNode: {
@@ -104,7 +116,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
         },
         triggeredRules: worldRulesResult.triggeredRules,
         isGameOver: isFinalTurn,
-        gameSummary: isFinalTurn ? '终局已至，命运尘埃落定。' : undefined,
+        gameSummary,
       },
       realityAnalysis: realityResult.statAnalysis || [],
       ruleStatusMap: worldRulesResult.ruleStatusMap || {},

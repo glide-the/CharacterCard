@@ -114,8 +114,8 @@ const RealityMappingPanel: React.FC<Props> = ({
         {loading && <div className="text-xs text-stone-gray">现实映射分析中...</div>}
         {!loading && aiAnalysis && aiAnalysis.length > 0 && (
           <div className="space-y-1 text-xs">
-            {aiAnalysis.map((item) => (
-              <div key={item.statKey} className="text-paper/80">
+            {aiAnalysis.map((item, index) => (
+              <div key={`${item.statKey}-${index}`} className="text-paper/80">
                 <span className="text-gold mr-1">{item.statKey}</span>
                 <span>{item.warningMessage || item.reason}</span>
               </div>

@@ -11,6 +11,15 @@ interface NarrativeTaskInput {
   maxTurns: number;
 }
 
+interface FinalSummaryTaskInput {
+  character: Character;
+  historySummary: string;
+  finalNarrativeText: string;
+  activeRules: RuleCard[];
+  turnCount: number;
+  maxTurns: number;
+}
+
 const NARRATIVE_SYSTEM_PROMPT = `
 你是「人格编年史」的主叙事官，必须维护世界稳定与叙事连续性。
 
@@ -33,6 +42,35 @@ const NARRATIVE_SYSTEM_PROMPT = `
 - 仅输出叙事正文。
 - 长度建议 150-260 字。
 - 禁止列点、禁止解释、禁止代码块。
+`;
+
+const FINAL_SUMMARY_SYSTEM_PROMPT = `
+你是「人格编年史」的终局解读官。
+
+【目标】
+输出一段有思想密度的终局总结，不只复述剧情，还要交代玩家在“现实-虚拟链接规则”上的收获与困惑。
+
+【必须覆盖的四个维度】
+1) 链接现实与虚拟规则：
+   - 区分“情境唤起”（游戏选择让人想起现实处境）、
+   - “机制映射”（游戏规则模拟社会机制）、
+   - “迁移学习”（把游戏中形成的判断带回现实）。
+   - 结合本局实际，判断更接近哪一种，是否同时发生。
+2) 重新定义游戏的冲动：
+   - 点明它何时推动了有效决策，何时可能只是意义包装。
+   - 保持克制，不做绝对论断。
+3) 动态规则的真实性：
+   - 判断本局规则变化更像“深层叙事驱动”还是“预设空间抽样”。
+   - 给出依据（来自剧情因果、角色动机、规则触发链）。
+4) 玩家学到的能力类型：
+   - 区分“通用判断力提升”与“系统内适应技巧”。
+   - 明确写出两者比例或倾向，不夸张。
+
+【写作要求】
+- 简体中文，第二人称“你”为主。
+- 文风冷静、具体、有张力，但避免煽情口号。
+- 长度 220-360 字。
+- 只输出正文，不要标题、分点、JSON、解释文本。
 `;
 
 export async function runNarrativeTask(
@@ -84,4 +122,50 @@ ${input.playerDirective?.trim() || '（无额外要求）'}
   );
 
   return { narrativeText: narrativeText.trim() };
+}
+
+export async function runFinalSummaryTask(
+  provider: AIConfig,
+  taskConfig: TaskAIConfig,
+  input: FinalSummaryTaskInput
+): Promise<string> {
+  const prompt = `
+[角色]
+${input.character.name}（${input.character.title}）
+弱点：${input.character.weakness}
+
+[终局回合]
+${input.turnCount}/${input.maxTurns}
+
+[激活规则]
+${input.activeRules.map((r) => `- ${r.title}: ${r.description}`).join('\n') || '（无）'}
+
+[历史摘要]
+${input.historySummary}
+
+[终局叙事片段]
+${input.finalNarrativeText}
+
+[任务]
+生成终局总结，必须覆盖系统提示中的四个维度，并基于本局因果给出克制判断。
+`;
+
+  const summary = await executeWithRetry(
+    () => generateContent(
+      {
+        provider: provider.provider,
+        gemini: provider.gemini,
+        openai: provider.openai,
+      },
+      {
+        prompt,
+        systemInstruction: FINAL_SUMMARY_SYSTEM_PROMPT,
+        jsonMode: false,
+      },
+      taskConfig
+    ),
+    taskConfig
+  );
+
+  return summary.trim();
 }
