@@ -146,7 +146,11 @@ export interface AIConfig {
 export type TaskName = 'narrative' | 'realityMapping' | 'worldRules' | 'choices';
 
 export interface TaskAIConfig {
+  provider?: ServiceProvider;
+  geminiApiKey?: string;
   geminiModel?: string;
+  openaiApiKey?: string;
+  openaiBaseUrl?: string;
   openaiModel?: string;
   temperature: number;
   maxOutputTokens: number;
