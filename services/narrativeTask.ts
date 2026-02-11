@@ -4,6 +4,7 @@ import { executeWithRetry, generateContent } from './aiEngine';
 interface NarrativeTaskInput {
   character: Character;
   choiceText: string;
+  playerDirective?: string;
   historySummary: string;
   activeRules: RuleCard[];
   turnCount: number;
@@ -19,6 +20,7 @@ const NARRATIVE_SYSTEM_PROMPT = `
 3) 规则可见性：如果规则正在生效，要在叙事中体现后果，但不要输出规则判定 JSON。
 4) 人物一致性：必须符合角色 title/弱点/特质，不可写出与人设冲突的行为动机。
 5) 文风：简体中文；画面具体、冷峻、克制，不写系统解释，不写元叙事。
+6) 深层逻辑：规则变化必须由场景冲突、角色动机与既往因果共同驱动，禁止把规则变化写成随机事件。
 
 【玩家体验与人称约束】
 1) 叙事默认使用第二人称“你”，让玩家直接代入角色行动与感受。
@@ -55,9 +57,13 @@ ${input.historySummary}
 [玩家本次选择]
 ${input.choiceText}
 
+[玩家剧情要求]
+${input.playerDirective?.trim() || '（无额外要求）'}
+
 [任务]
 生成下一段剧情叙事，要求风格稳定、因果清晰、可直接显示到中间叙事面板。
 必须以“你”作为叙事主视角，让玩家体验该角色当下处境。
+若玩家提供了剧情要求，请优先将其融入当前冲突，并确保规则变化体现为“叙事必然结果”，而非随机抽样。
 `;
 
   const narrativeText = await executeWithRetry(

@@ -4,6 +4,7 @@ import { executeWithRetry, generateContent } from './aiEngine';
 
 interface WorldRulesTaskInput {
   choiceText: string;
+  playerDirective?: string;
   narrativeText: string;
   rules: RuleCard[];
   turnCount: number;
@@ -50,6 +51,7 @@ const WORLD_RULES_SYSTEM_PROMPT = `
 
 【裁定要求】
 1) 必须基于玩家选择 + 叙事结果 + 当前规则清单裁定。
+1.1) 若存在玩家剧情要求，必须判断其与当前局势的因果关系，并体现在触发原因中。
 2) 不允许同一规则同时 activate 与 deactivate。
 3) 新增规则 add 时必须符合既有世界观与暗黑奇幻风格。
 4) removeIds 仅用于剧情上已彻底失效的规则。
@@ -70,6 +72,9 @@ ${input.turnCount}
 [玩家选择]
 ${input.choiceText}
 
+[玩家剧情要求]
+${input.playerDirective?.trim() || '（无额外要求）'}
+
 [叙事结果]
 ${input.narrativeText}
 
@@ -78,6 +83,7 @@ ${input.rules.map((rule) => `- id=${rule.id}, title=${rule.title}, active=${rule
 
 [任务]
 输出触发规则、规则状态流转、完整 ruleStatusMap。
+严格避免“随机触发”措辞，所有 reason 必须解释规则为何在本叙事脉络下必然变化。
 `;
 
   const response = await executeWithRetry(

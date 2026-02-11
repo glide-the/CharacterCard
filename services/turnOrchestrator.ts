@@ -20,6 +20,7 @@ interface OrchestratorInput {
   realityStats: { credibility: number; stress: number; connections: number };
   choiceText: string;
   historySummary: string;
+  playerDirective?: string;
   turnCount: number;
   maxTurns: number;
   config: TurnAIConfig;
@@ -45,6 +46,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
       character: input.character,
       choiceText: input.choiceText,
       historySummary: input.historySummary,
+      playerDirective: input.playerDirective,
       activeRules: input.rules.filter((r) => r.active),
       turnCount: input.turnCount,
       maxTurns: input.maxTurns,
@@ -70,6 +72,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
       runWorldRulesTask(input.config.provider, taskConfigs.worldRules, {
         choiceText: input.choiceText,
         narrativeText: narrativeText,
+        playerDirective: input.playerDirective,
         rules: input.rules,
         turnCount: input.turnCount,
       }).catch(() => ({
@@ -80,6 +83,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
       runChoicesTask(input.config.provider, taskConfigs.choices, {
         narrativeText: narrativeText,
         historySummary: input.historySummary,
+        playerDirective: input.playerDirective,
       }).catch(() => ({ choices: defaultChoices })),
     ]);
 
