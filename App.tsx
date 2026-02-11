@@ -113,6 +113,36 @@ const App: React.FC = () => {
     [parsedMappings]
   );
 
+  const buildEarlyGameOverSummary = (
+    reason: 'stress' | 'credibility',
+    latestNarrative: string,
+    currentChoice: string,
+    statsSnapshot: { credibility: number; stress: number; connections: number },
+    activeRulesTitles: string[],
+  ) => {
+    const reasonText =
+      reason === 'stress'
+        ? '你被持续累积的精神高压击穿了判断边界，在现实与叙事之间失去稳定锚点。'
+        : '你的社会信用与可信度坍塌，外界不再接受你的叙述与动机。';
+
+    const normalizedNarrative = latestNarrative.trim();
+    const narrativeExcerpt = normalizedNarrative.length > 200
+      ? `${normalizedNarrative.slice(0, 200)}…`
+      : normalizedNarrative;
+    const activeRulesSummary = activeRulesTitles.length > 0
+      ? activeRulesTitles.slice(0, 4).join('、')
+      : '无显性规则触发';
+
+    return [
+      reasonText,
+      `最后一次选择是「${currentChoice}」。`,
+      `当下状态：信誉 ${statsSnapshot.credibility} / 压力 ${statsSnapshot.stress} / 人脉 ${statsSnapshot.connections}。`,
+      `主导局面的规则：${activeRulesSummary}。`,
+      `终局片段：${narrativeExcerpt || '叙事信号中断，系统无法还原完整现场。'}`,
+      '这并非单次失误，而是连续决策路径在规则网络中的必然收束。',
+    ].join('\n\n');
+  };
+
   // Auto-scroll to bottom of story log
   useEffect(() => {
     if (scrollRef.current) {
@@ -230,11 +260,23 @@ const App: React.FC = () => {
 
     if (newStats.stress >= 10) {
         isGameOver = true;
-        summary = summary || "你的理智已经破碎。世界变成了一团无法理解的色彩和尖叫。";
+        summary = summary || buildEarlyGameOverSummary(
+          'stress',
+          result.storyNode.text,
+          choiceText,
+          newStats,
+          newRules.filter((rule) => rule.active).map((rule) => rule.title),
+        );
     }
     if (newStats.credibility <= 0) {
         isGameOver = true;
-        summary = summary || "你被彻底放逐。没有城市愿意为你打开大门。";
+        summary = summary || buildEarlyGameOverSummary(
+          'credibility',
+          result.storyNode.text,
+          choiceText,
+          newStats,
+          newRules.filter((rule) => rule.active).map((rule) => rule.title),
+        );
     }
 
     // D. Update all states
@@ -347,7 +389,7 @@ const App: React.FC = () => {
   );
 
   const renderGameOver = () => (
-      <div className="h-screen w-full bg-black flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      <div className="h-screen w-full bg-black flex flex-col items-center justify-center p-4 md:p-8 relative overflow-y-auto">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-20"></div>
           
           {/* Settings Button */}
@@ -359,13 +401,13 @@ const App: React.FC = () => {
             <i className="fa-solid fa-cog text-xl group-hover:rotate-90 transition-transform duration-300"></i>
           </button>
           
-          <div className="z-10 max-w-2xl text-center border-[6px] border-double border-gold p-12 bg-[#1a0f0f] shadow-[0_0_100px_rgba(139,0,0,0.5)] transform animate-fade-in-up">
+          <div className="z-10 w-full max-w-3xl text-center border-[6px] border-double border-gold p-6 md:p-12 bg-[#1a0f0f] shadow-[0_0_100px_rgba(139,0,0,0.5)] transform animate-fade-in-up my-6 md:my-10">
               <h1 className="text-6xl font-display text-velvet-red mb-6 uppercase tracking-widest">
                   {turnCount >= maxTurns ? "命运终结" : "旅途崩坏"}
               </h1>
               <div className="w-full h-1 bg-gold mb-8"></div>
               
-              <div className="mb-8 font-serif text-2xl text-paper italic leading-relaxed">
+              <div className="mb-8 font-serif text-base md:text-2xl text-paper italic leading-relaxed max-h-[40vh] overflow-y-auto px-1 whitespace-pre-line text-left md:text-center">
                   "{finalSummary || "你的故事在这里戛然而止..."}"
               </div>
 
