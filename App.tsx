@@ -156,7 +156,7 @@ const App: React.FC = () => {
     const providerConfig = {
       provider,
       gemini: geminiKey ? { apiKey: geminiKey } : undefined,
-      openai: provider === 'openai' ? openaiConfig : undefined
+      openai: openaiConfig
     };
     
     let result: EngineResult | null = null;

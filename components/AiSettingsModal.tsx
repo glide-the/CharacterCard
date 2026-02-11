@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { CHARACTERS } from '../constants';
-import { TaskName } from '../types';
+import { ServiceProvider, TaskName } from '../types';
 import {
   DEFAULT_TASK_CONFIG_SCOPE,
   useShowAiSettings, useSetShowAiSettings,
@@ -36,6 +36,8 @@ export const AiSettingsModal: React.FC = () => {
   const updateTaskConfig = useUpdateTaskConfig();
   const resetTaskConfigs = useResetTaskConfigs();
   const [activeTask, setActiveTask] = useState<TaskName>('narrative');
+  const [showTaskOpenaiKey, setShowTaskOpenaiKey] = useState(false);
+  const [showTaskGeminiKey, setShowTaskGeminiKey] = useState(false);
 
   const scopeOptions = useMemo(
     () => [
@@ -49,6 +51,10 @@ export const AiSettingsModal: React.FC = () => {
   if (!isOpen) return null;
 
   const config = taskConfigs[activeTask];
+
+  const updateTaskProvider = (nextProvider: '' | ServiceProvider) => {
+    updateTaskConfig(activeTask, { provider: nextProvider || undefined });
+  };
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -94,26 +100,6 @@ export const AiSettingsModal: React.FC = () => {
             <div className="text-xs text-stone-gray mb-2">
               当前编辑：{scopeOptions.find((item) => item.id === scopeId)?.label || '未知作用域'}
             </div>
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-              <label className="text-xs">Gemini 模型
-                <input
-                  type="text"
-                  value={config.geminiModel || ''}
-                  onChange={(e) => updateTaskConfig(activeTask, { geminiModel: e.target.value || undefined })}
-                  placeholder="gemini-2.5-flash-preview-05-20"
-                  className="w-full px-2 py-1 bg-brown-800/40 border"
-                />
-              </label>
-              <label className="text-xs">OpenAI 模型
-                <input
-                  type="text"
-                  value={config.openaiModel || ''}
-                  onChange={(e) => updateTaskConfig(activeTask, { openaiModel: e.target.value || undefined })}
-                  placeholder="gpt-4.1-mini"
-                  className="w-full px-2 py-1 bg-brown-800/40 border"
-                />
-              </label>
-            </div>
             <div className="flex gap-2 flex-wrap mb-3">
               {(Object.keys(TASK_LABELS) as TaskName[]).map((task) => (
                 <button key={task} onClick={() => setActiveTask(task)} className={`px-3 py-1 border rounded ${activeTask === task ? 'border-gold text-gold' : 'border-brown-600 text-stone-gray'}`}>
@@ -121,6 +107,93 @@ export const AiSettingsModal: React.FC = () => {
                 </button>
               ))}
             </div>
+
+            <div className="text-xs rounded border border-gold/30 bg-gold/5 text-paper/80 px-3 py-2 mb-3 leading-5">
+              <div className="font-semibold text-gold">任务级配置优先</div>
+              <div>留空则回退全局配置</div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 mb-3">
+              <label className="text-xs">任务级 Provider
+                <select
+                  value={config.provider || ''}
+                  onChange={(e) => updateTaskProvider(e.target.value as '' | ServiceProvider)}
+                  className="w-full px-2 py-1 bg-brown-800/40 border"
+                >
+                  <option value="">跟随全局</option>
+                  <option value="gemini">Gemini</option>
+                  <option value="openai">OpenAI</option>
+                </select>
+              </label>
+            </div>
+
+            {(config.provider || provider) === 'openai' ? (
+              <div className="grid gap-2 mb-3">
+                <input
+                  type="text"
+                  value={config.openaiBaseUrl || ''}
+                  onChange={(e) => updateTaskConfig(activeTask, { openaiBaseUrl: e.target.value || undefined })}
+                  placeholder="OpenAI Base URL（留空回退全局）"
+                  className="w-full px-2 py-1 bg-brown-800/40 border"
+                />
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs">OpenAI API Key</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTaskOpenaiKey((v) => !v)}
+                      className="text-[11px] underline text-paper/70"
+                    >
+                      {showTaskOpenaiKey ? '隐藏 key' : '显示 key'}
+                    </button>
+                  </div>
+                  <input
+                    type={showTaskOpenaiKey ? 'text' : 'password'}
+                    value={config.openaiApiKey || ''}
+                    onChange={(e) => updateTaskConfig(activeTask, { openaiApiKey: e.target.value || undefined })}
+                    placeholder="留空回退全局 OpenAI Key"
+                    className="w-full px-2 py-1 bg-brown-800/40 border"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={config.openaiModel || ''}
+                  onChange={(e) => updateTaskConfig(activeTask, { openaiModel: e.target.value || undefined })}
+                  placeholder="OpenAI Model（留空回退全局）"
+                  className="w-full px-2 py-1 bg-brown-800/40 border"
+                />
+              </div>
+            ) : (
+              <div className="grid gap-2 mb-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs">Gemini API Key（可选）</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTaskGeminiKey((v) => !v)}
+                      className="text-[11px] underline text-paper/70"
+                    >
+                      {showTaskGeminiKey ? '隐藏 key' : '显示 key'}
+                    </button>
+                  </div>
+                  <input
+                    type={showTaskGeminiKey ? 'text' : 'password'}
+                    value={config.geminiApiKey || ''}
+                    onChange={(e) => updateTaskConfig(activeTask, { geminiApiKey: e.target.value || undefined })}
+                    placeholder="留空回退全局 Gemini Key"
+                    className="w-full px-2 py-1 bg-brown-800/40 border"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={config.geminiModel || ''}
+                  onChange={(e) => updateTaskConfig(activeTask, { geminiModel: e.target.value || undefined })}
+                  placeholder="Gemini Model（可选）"
+                  className="w-full px-2 py-1 bg-brown-800/40 border"
+                />
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs">Temperature
                 <input type="number" step="0.05" value={config.temperature} onChange={(e) => updateTaskConfig(activeTask, { temperature: Number(e.target.value) })} className="w-full px-2 py-1 bg-brown-800/40 border" />

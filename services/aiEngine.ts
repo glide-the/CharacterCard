@@ -179,15 +179,13 @@ export interface CompletionRequest {
 
 // --- Validation ---
 
-function validateConfig(config: AIProviderConfig) {
-  if (config.provider === 'openai') {
-    if (!config.openai?.apiKey) {
-      throw new Error("OpenAI API Key is missing in settings.");
-    }
-  } else if (config.provider === 'gemini') {
-    if (!process.env.API_KEY && !config.gemini?.apiKey) {
-      throw new Error("Gemini API Key is missing (process.env.API_KEY).");
-    }
+function validateConfig(provider: 'gemini' | 'openai', config: { geminiApiKey?: string; openaiApiKey?: string }) {
+  if (provider === 'openai' && !config.openaiApiKey) {
+    throw new Error("OpenAI API Key is missing in settings.");
+  }
+
+  if (provider === 'gemini' && !process.env.API_KEY && !config.geminiApiKey) {
+    throw new Error("Gemini API Key is missing (process.env.API_KEY).");
   }
 }
 
@@ -226,11 +224,15 @@ export const generateContent = async (
   request: CompletionRequest,
   taskConfig?: TaskAIConfig
 ): Promise<string> => {
-  validateConfig(config);
+  const effectiveProvider = taskConfig?.provider || config.provider;
+  const geminiApiKey = taskConfig?.geminiApiKey || config.gemini?.apiKey;
+  const openaiApiKey = taskConfig?.openaiApiKey || config.openai?.apiKey;
+
+  validateConfig(effectiveProvider, { geminiApiKey, openaiApiKey });
 
   // --- Gemini Implementation ---
-  if (config.provider === 'gemini') {
-    const apiKey = config.gemini?.apiKey || process.env.API_KEY;
+  if (effectiveProvider === 'gemini') {
+    const apiKey = geminiApiKey || process.env.API_KEY;
     const ai = new GoogleGenAI({ apiKey });
     
     const geminiConfig: any = {
@@ -264,10 +266,10 @@ export const generateContent = async (
   }
 
   // --- OpenAI Implementation ---
-  if (config.provider === 'openai' && config.openai) {
+  if (effectiveProvider === 'openai') {
     const client = new OpenAI({
-      apiKey: config.openai.apiKey,
-      baseURL: config.openai.baseUrl || "https://api.openai.com/v1",
+      apiKey: openaiApiKey || '',
+      baseURL: taskConfig?.openaiBaseUrl || config.openai?.baseUrl || "https://api.openai.com/v1",
       dangerouslyAllowBrowser: true
     });
 
@@ -292,7 +294,7 @@ export const generateContent = async (
     try {
       const requestOptions: any = {
         messages,
-        model: taskConfig?.openaiModel || config.openai.model || 'gpt-4-turbo-preview',
+        model: taskConfig?.openaiModel || config.openai?.model || 'gpt-4-turbo-preview',
         ...(taskConfig ? {
           temperature: taskConfig.temperature,
           max_tokens: taskConfig.maxOutputTokens,
@@ -327,11 +329,15 @@ export async function* generateStream(
   request: CompletionRequest,
   taskConfig?: TaskAIConfig
 ): AsyncGenerator<string> {
-  validateConfig(config);
+  const effectiveProvider = taskConfig?.provider || config.provider;
+  const geminiApiKey = taskConfig?.geminiApiKey || config.gemini?.apiKey;
+  const openaiApiKey = taskConfig?.openaiApiKey || config.openai?.apiKey;
+
+  validateConfig(effectiveProvider, { geminiApiKey, openaiApiKey });
 
   // --- Gemini Stream ---
-  if (config.provider === 'gemini') {
-    const apiKey = config.gemini?.apiKey || process.env.API_KEY;
+  if (effectiveProvider === 'gemini') {
+    const apiKey = geminiApiKey || process.env.API_KEY;
     const ai = new GoogleGenAI({ apiKey });
 
     const streamResp = await ai.models.generateContentStream({
@@ -355,10 +361,10 @@ export async function* generateStream(
   }
 
   // --- OpenAI Stream ---
-  if (config.provider === 'openai' && config.openai) {
+  if (effectiveProvider === 'openai') {
     const client = new OpenAI({
-      apiKey: config.openai.apiKey,
-      baseURL: config.openai.baseUrl || "https://api.openai.com/v1",
+      apiKey: openaiApiKey || '',
+      baseURL: taskConfig?.openaiBaseUrl || config.openai?.baseUrl || "https://api.openai.com/v1",
       dangerouslyAllowBrowser: true,
     });
 
@@ -369,7 +375,7 @@ export async function* generateStream(
     messages.push({ role: "user", content: request.prompt });
 
     const stream = await client.chat.completions.create({
-      model: taskConfig?.openaiModel || config.openai.model || 'gpt-4-turbo-preview',
+      model: taskConfig?.openaiModel || config.openai?.model || 'gpt-4-turbo-preview',
       messages,
       stream: true,
       ...(taskConfig ? {
