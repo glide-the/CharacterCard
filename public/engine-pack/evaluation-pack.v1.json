@@ -1,0 +1,1881 @@
+{
+  "meta": {
+    "sourceName": "Symbol Engine Generator v2.0 - 西游记文本分析",
+    "sourceVersion": "2.0.0",
+    "domain": "narrative",
+    "generatedAt": "2026-02-18T00:00:00Z"
+  },
+  "metrics": {
+    "symbol_count": 10,
+    "rule_count": 8,
+    "fantasy_knot_count": 3,
+    "power_chain_count": 1,
+    "average_witchcraft_risk": 0.4625,
+    "interrogation_seeds": 10,
+    "silence_entries": 5,
+    "rewrite_entries": 5
+  },
+  "symbolDictionary": [
+    {
+      "id": "sym_001",
+      "label": "中心载体",
+      "definition": "叙事主体的核心承载者，同时具备对立属性（慈悲但固执）",
+      "constraints": [
+        "必须具备二元对立属性",
+        "必须是叙事主体"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_002",
+      "label": "全能变体",
+      "definition": "具备强大能力但呈现叛逆属性的叙事主体",
+      "constraints": [
+        "能力超群",
+        "具有叛逆性"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_003",
+      "label": "欲望载体",
+      "definition": "代表欲望但具备忠心属性的叙事主体",
+      "constraints": [
+        "欲望驱动",
+        "具备忠诚度"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_004",
+      "label": "稳定载体",
+      "definition": "提供稳定性的叙事主体",
+      "constraints": [
+        "沉稳",
+        "稳定"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_005",
+      "label": "对立存在",
+      "definition": "阻碍路径前进的力量",
+      "constraints": [
+        "阻碍性",
+        "对立性"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_006",
+      "label": "超越存在",
+      "definition": "支持路径前进的力量",
+      "constraints": [
+        "超越性",
+        "支持性"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_007",
+      "label": "路径",
+      "definition": "载体运动的空间与方向性",
+      "constraints": [
+        "方向性",
+        "运动性"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_008",
+      "label": "文本",
+      "definition": "目的论对象，具有确证权威的力量",
+      "constraints": [
+        "目的论性",
+        "权威性"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_009",
+      "label": "试炼",
+      "definition": "路径上重复出现的阻碍模式",
+      "constraints": [
+        "重复性",
+        "阻碍性"
+      ],
+      "kind": "符号"
+    },
+    {
+      "id": "sym_010",
+      "label": "转变",
+      "definition": "试炼序列的终极承诺与目标",
+      "constraints": [
+        "目的论性",
+        "终极性"
+      ],
+      "kind": "符号"
+    }
+  ],
+  "variableModel": {
+    "variables": [
+      {
+        "id": "载体能力",
+        "name": "载体能力",
+        "definition": "载体在叙事中的能力强度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "可累积"
+        ]
+      },
+      {
+        "id": "集体凝聚力",
+        "name": "集体凝聚力",
+        "definition": "集体主体的统一程度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "可增减"
+        ]
+      },
+      {
+        "id": "角色复杂度",
+        "name": "角色复杂度",
+        "definition": "角色属性的复杂程度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "受二元性影响"
+        ]
+      },
+      {
+        "id": "叙事张力",
+        "name": "叙事张力",
+        "definition": "叙事中的张力强度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "可累积"
+        ]
+      },
+      {
+        "id": "权力距离",
+        "name": "权力距离",
+        "definition": "层级之间的权力距离",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "影响秩序稳定性"
+        ]
+      },
+      {
+        "id": "秩序稳定性",
+        "name": "秩序稳定性",
+        "definition": "等级秩序的稳定程度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "可固化"
+        ]
+      },
+      {
+        "id": "个体主体性",
+        "name": "个体主体性",
+        "definition": "个体载体的主体性程度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "可被消融"
+        ]
+      },
+      {
+        "id": "路径确定性",
+        "name": "路径确定性",
+        "definition": "路径达成的确定性程度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "受目的论影响"
+        ]
+      },
+      {
+        "id": "偶然性空间",
+        "name": "偶然性空间",
+        "definition": "偶然性与可能性的空间",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "可被排除"
+        ]
+      },
+      {
+        "id": "合法性指数",
+        "name": "合法性指数",
+        "definition": "权威结构的合法性程度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "可被确证"
+        ]
+      },
+      {
+        "id": "解释权集中",
+        "name": "解释权集中",
+        "definition": "解释权的集中程度",
+        "default": 0.5,
+        "constraints": [
+          "0-1范围",
+          "可垄断"
+        ]
+      }
+    ]
+  },
+  "ruleCatalog": [
+    {
+      "id": "prop_001",
+      "name": "试炼-转变递进律",
+      "definition": "试炼序列必然导致终极转变",
+      "constraints": [
+        "需要边界",
+        "需要失败条件"
+      ],
+      "advanced": {
+        "id": "prop_001",
+        "statement": "试炼序列必然导致终极转变",
+        "causal_form": "[试炼重复] → [积累] → [质变]",
+        "boundary": "适用于线性进步叙事、目的论结构",
+        "failure_conditions": [
+          "试炼无限循环无出口",
+          "载体中途消解",
+          "外部干预切断路径",
+          "时间债务耗尽"
+        ],
+        "rewrite_hooks": [
+          "statement",
+          "causal_form",
+          "boundary"
+        ],
+        "witchcraft_risk": 0.45,
+        "risk_reasons": [
+          "因果倒置：目的论承诺预先存在于起始点",
+          "排他性封闭：排除失败和放弃的可能"
+        ],
+        "alternatives": [
+          "试炼序列不必然导致转变",
+          "非试炼因素导致转变",
+          "终极转变不是目的"
+        ]
+      }
+    },
+    {
+      "id": "prop_002",
+      "name": "载体二元性平衡律",
+      "definition": "载体二元性构成叙事张力与角色深度",
+      "constraints": [
+        "需要边界",
+        "需要失败条件"
+      ],
+      "advanced": {
+        "id": "prop_002",
+        "statement": "载体二元性构成叙事张力与角色深度",
+        "causal_form": "[对立属性共存] → [内部冲突] → [叙事复杂性]",
+        "boundary": "适用于多维度角色构建、深度叙事",
+        "failure_conditions": [
+          "对立属性互相抵消为中性",
+          "对立属性无冲突共存",
+          "载体无法维持统一性"
+        ],
+        "rewrite_hooks": [
+          "statement",
+          "boundary"
+        ],
+        "witchcraft_risk": 0.25,
+        "risk_reasons": [
+          "定义自指：对立属性互相定义对方"
+        ],
+        "alternatives": [
+          "载体二元性导致角色不稳定",
+          "对立属性应分离为独立载体",
+          "二元性是叙事简化而非深度"
+        ]
+      }
+    },
+    {
+      "id": "prop_003",
+      "name": "集体主体消融律",
+      "definition": "集体主体消融个体以实现更高层级目标",
+      "constraints": [
+        "需要边界",
+        "需要失败条件"
+      ],
+      "advanced": {
+        "id": "prop_003",
+        "statement": "集体主体消融个体以实现更高层级目标",
+        "causal_form": "[个体纳入集体] → [主体性转移] → [集体主体显现]",
+        "boundary": "适用于层级化叙事、集体主义结构",
+        "failure_conditions": [
+          "个体与集体目标完全冲突",
+          "集体结构瓦解",
+          "个体主体性完全丧失"
+        ],
+        "rewrite_hooks": [
+          "statement",
+          "causal_form",
+          "boundary"
+        ],
+        "witchcraft_risk": 0.55,
+        "risk_reasons": [
+          "排他性封闭：排除个体能动性",
+          "边界缺失：未声明个体保留权利的范围"
+        ],
+        "alternatives": [
+          "集体主体不必然消融个体",
+          "个体与集体可并行存在",
+          "集体主体是虚构假设"
+        ]
+      }
+    },
+    {
+      "id": "prop_004",
+      "name": "目的论担保律",
+      "definition": "路径终点预存在起点，担保叙事必然完成",
+      "constraints": [
+        "需要边界",
+        "需要失败条件"
+      ],
+      "advanced": {
+        "id": "prop_004",
+        "statement": "路径终点预存在起点，担保叙事必然完成",
+        "causal_form": "[终点承诺] → [路径展开] → [必然兑现]",
+        "boundary": "适用于目的论叙事、线性进步结构",
+        "failure_conditions": [
+          "终点被证明不可达",
+          "路径分叉且无优先次序",
+          "终点与起点失去因果连接"
+        ],
+        "rewrite_hooks": [
+          "statement",
+          "causal_form",
+          "boundary"
+        ],
+        "witchcraft_risk": 0.65,
+        "risk_reasons": [
+          "因果倒置：结论先于前提出现在话语流中",
+          "排他性封闭：排除失败、放弃、路径变更的可能",
+          "边界缺失：未声明终点可重新定义的条件"
+        ],
+        "alternatives": [
+          "路径终点不存在预存承诺",
+          "终点可在叙事中被重新定义",
+          "目的论是叙事简化策略"
+        ]
+      }
+    },
+    {
+      "id": "prop_005",
+      "name": "意识形态融合律",
+      "definition": "超越意识形态与自然意识形态可融合为统一叙事",
+      "constraints": [
+        "需要边界",
+        "需要失败条件"
+      ],
+      "advanced": {
+        "id": "prop_005",
+        "statement": "超越意识形态与自然意识形态可融合为统一叙事",
+        "causal_form": "[意识形态A] + [意识形态B] → [互补结构] → [融合显现]",
+        "boundary": "适用于多元叙事、融合性结构",
+        "failure_conditions": [
+          "意识形态完全冲突无法调和",
+          "融合导致意识形态消解",
+          "融合结构被单一意识形态吞噬"
+        ],
+        "rewrite_hooks": [
+          "statement",
+          "boundary"
+        ],
+        "witchcraft_risk": 0.35,
+        "risk_reasons": [
+          "定义自指：意识形态互相定义边界",
+          "排他性筛选：排除冲突与吞噬的可能"
+        ],
+        "alternatives": [
+          "意识形态融合是表面现象",
+          "融合掩盖权力不对等",
+          "意识形态应保持独立而非融合"
+        ]
+      }
+    },
+    {
+      "id": "prop_006",
+      "name": "等级秩序固化律",
+      "definition": "等级秩序通过重复强化得以固化",
+      "constraints": [
+        "需要边界",
+        "需要失败条件"
+      ],
+      "advanced": {
+        "id": "prop_006",
+        "statement": "等级秩序通过重复强化得以固化",
+        "causal_form": "[层级重复] → [合法性积累] → [秩序固化]",
+        "boundary": "适用于层级化叙事、秩序导向结构",
+        "failure_conditions": [
+          "层级结构被颠覆",
+          "上级失去合法性基础",
+          "下级完全主体性丧失"
+        ],
+        "rewrite_hooks": [
+          "statement",
+          "causal_form",
+          "boundary"
+        ],
+        "witchcraft_risk": 0.4,
+        "risk_reasons": [
+          "排他性封闭：排除平权与流动的可能",
+          "因果倒置：秩序被呈现为自然而非建构"
+        ],
+        "alternatives": [
+          "等级秩序是临时建构",
+          "层级可被逆向重组",
+          "平权结构可能存在"
+        ]
+      }
+    },
+    {
+      "id": "prop_007",
+      "name": "对立存在-超越存在辩证律",
+      "definition": "对立存在与超越存在构成辩证运动，推动路径前进",
+      "constraints": [
+        "需要边界",
+        "需要失败条件"
+      ],
+      "advanced": {
+        "id": "prop_007",
+        "statement": "对立存在与超越存在构成辩证运动，推动路径前进",
+        "causal_form": "[对立出现] → [超越干预] → [辩证前进]",
+        "boundary": "适用于辩证叙事、冲突驱动结构",
+        "failure_conditions": [
+          "对立与超越无法区分",
+          "辩证运动停滞为单一状态",
+          "解决方案无法兑现承诺"
+        ],
+        "rewrite_hooks": [
+          "statement",
+          "causal_form",
+          "boundary"
+        ],
+        "witchcraft_risk": 0.5,
+        "risk_reasons": [
+          "定义自指环：对立与超越互相定义对方",
+          "排他性封闭：排除混沌、模糊、不可分类状态"
+        ],
+        "alternatives": [
+          "对立与超越是虚假二分",
+          "辩证运动是循环而非前进",
+          "第三种状态始终存在"
+        ]
+      }
+    },
+    {
+      "id": "prop_008",
+      "name": "文本-权威转换律",
+      "definition": "终极文本确证权威，权威赋予文本合法性",
+      "constraints": [
+        "需要边界",
+        "需要失败条件"
+      ],
+      "advanced": {
+        "id": "prop_008",
+        "statement": "终极文本确证权威，权威赋予文本合法性",
+        "causal_form": "[文本获取] → [权威显现] → [主权确证]",
+        "boundary": "适用于权威叙事、文本中心结构",
+        "failure_conditions": [
+          "文本被证明为虚构或不可信",
+          "文本解释权分散且冲突",
+          "文本与权威失去因果连接"
+        ],
+        "rewrite_hooks": [
+          "statement",
+          "causal_form",
+          "boundary"
+        ],
+        "witchcraft_risk": 0.6,
+        "risk_reasons": [
+          "因果倒置：权威被呈现为文本的结果而非前提",
+          "定义自指环：文本定义权威，权威定义文本",
+          "边界缺失：未声明文本可被重新解释的条件",
+          "排他性封闭：排除多元解释的可能"
+        ],
+        "alternatives": [
+          "权威独立于文本存在",
+          "文本可被重新解释而颠覆权威",
+          "文本-权威连接是偶然建构"
+        ]
+      }
+    }
+  ],
+  "runtimeRuleCards": [
+    {
+      "id": "prop_001-rule_001",
+      "propositionId": "prop_001",
+      "ruleId": "rule_001",
+      "title": "试炼-转变递进律",
+      "condition": "当 [重复阻碍模式] 在叙事中出现 ≥3次",
+      "action": "新增 [试炼] → [克服] → [强化] 连接; [载体能力] +0.15; [集体凝聚力] +0.10; 幻想结力量指数 +0.05",
+      "priority": 1,
+      "type": "UNKNOWN"
+    },
+    {
+      "id": "prop_002-rule_002",
+      "propositionId": "prop_002",
+      "ruleId": "rule_002",
+      "title": "载体二元性平衡律",
+      "condition": "当 [角色属性] 同时呈现对立特征",
+      "action": "连接 [正向属性] 与 [负向属性] 为同一载体; [角色复杂度] +0.25; [叙事张力] +0.20; 触发 [内部冲突] 运动链",
+      "priority": 2,
+      "type": "UNKNOWN"
+    },
+    {
+      "id": "prop_003-rule_003",
+      "propositionId": "prop_003",
+      "ruleId": "rule_003",
+      "title": "集体主体消融律",
+      "condition": "当 [个体载体] 被纳入 [集体结构] 且服从共同目标",
+      "action": "[个体符号] 连接到 [集体符号] 为部分-整体关系; [集体凝聚力] +0.30; [个体主体性] -0.20; 强化 [原则化] → [意志集中] 阶段",
+      "priority": 3,
+      "type": "UNKNOWN"
+    },
+    {
+      "id": "prop_004-rule_004",
+      "propositionId": "prop_004",
+      "ruleId": "rule_004",
+      "title": "目的论担保律",
+      "condition": "当 [路径起点] 预先包含 [终点承诺]",
+      "action": "[起点] → [方向性] → [终点] 形成闭环结构; [路径确定性] +0.40; [偶然性空间] -0.35; 强化 [承诺-兑现] 重复模式",
+      "priority": 4,
+      "type": "UNKNOWN"
+    },
+    {
+      "id": "prop_005-rule_005",
+      "propositionId": "prop_005",
+      "ruleId": "rule_005",
+      "title": "意识形态融合律",
+      "condition": "当 [超越意识形态] 与 [自然意识形态] 同时出现在叙事中",
+      "action": "[意识形态A] + [意识形态B] → [融合结构]; [意识形态兼容性] +0.25; [叙事复杂性] +0.15; 触发 [包容性扩张] 运动链",
+      "priority": 5,
+      "type": "UNKNOWN"
+    },
+    {
+      "id": "prop_006-rule_006",
+      "propositionId": "prop_006",
+      "ruleId": "rule_006",
+      "title": "等级秩序固化律",
+      "condition": "当 [层级结构] 在叙事中被重复强化 ≥3次",
+      "action": "[上级符号] → [下级符号] 连接强度 +0.20; [权力距离] +0.15; [秩序稳定性] +0.25; 强化 [权力聚合] → [原则化] 阶段",
+      "priority": 6,
+      "type": "UNKNOWN"
+    },
+    {
+      "id": "prop_007-rule_007",
+      "propositionId": "prop_007",
+      "ruleId": "rule_007",
+      "title": "对立存在-超越存在辩证律",
+      "condition": "当 [阻碍力量] 与 [支持力量] 交替出现在路径上",
+      "action": "[对立存在] ↔ [超越存在] 形成辩证运动; [叙事冲突性] +0.30; [解决确定性] +0.10; 强化 [冲突-解决] 重复模式",
+      "priority": 7,
+      "type": "UNKNOWN"
+    },
+    {
+      "id": "prop_008-rule_008",
+      "propositionId": "prop_008",
+      "ruleId": "rule_008",
+      "title": "文本-权威转换律",
+      "condition": "当 [终极文本] 被呈现为 [确证源头]",
+      "action": "[文本] → [权威] → [主权] 形成授权链; [合法性指数] +0.35; [解释权集中] +0.25; 触发 [主权表达] 阶段",
+      "priority": 8,
+      "type": "UNKNOWN"
+    }
+  ],
+  "stateModel": {
+    "current": "initialized",
+    "history": [
+      "field_ingestion",
+      "slicing",
+      "freezing",
+      "exclusivity_filtering",
+      "symbolization",
+      "proposition_generation",
+      "interrogation",
+      "witchcraft_detection",
+      "power_rewrite",
+      "packaging"
+    ],
+    "transitions": [
+      {
+        "from": "field_ingestion",
+        "to": "slicing",
+        "trigger": "幻想候选提取完成"
+      },
+      {
+        "from": "slicing",
+        "to": "freezing",
+        "trigger": "范指单位提取完成"
+      },
+      {
+        "from": "freezing",
+        "to": "exclusivity_filtering",
+        "trigger": "符号凝固完成"
+      },
+      {
+        "from": "exclusivity_filtering",
+        "to": "symbolization",
+        "trigger": "筛选器生成完成"
+      },
+      {
+        "from": "symbolization",
+        "to": "proposition_generation",
+        "trigger": "符号图谱生成完成"
+      },
+      {
+        "from": "proposition_generation",
+        "to": "interrogation",
+        "trigger": "命题生成完成"
+      },
+      {
+        "from": "interrogation",
+        "to": "witchcraft_detection",
+        "trigger": "替代命题生成完成"
+      },
+      {
+        "from": "witchcraft_detection",
+        "to": "power_rewrite",
+        "trigger": "巫术风险评分完成"
+      },
+      {
+        "from": "power_rewrite",
+        "to": "packaging",
+        "trigger": "命题改写完成"
+      },
+      {
+        "from": "packaging",
+        "to": "initialized",
+        "trigger": "输出封装完成"
+      }
+    ]
+  },
+  "pipelineHints": {
+    "parallelTasks": [
+      {
+        "name": "state_flow_generation",
+        "status": "pending",
+        "dependencies": [],
+        "output": "files/charts/state_flow.png"
+      },
+      {
+        "name": "rule_engine_initialization",
+        "status": "pending",
+        "dependencies": [],
+        "output": "files/logs/rule_engine_pseudo.txt"
+      },
+      {
+        "name": "json_schema_generation",
+        "status": "pending",
+        "dependencies": [],
+        "output": "files/data/schema_validation.json"
+      }
+    ]
+  },
+  "packSummary": "符号引擎生成器v2.0已成功从西游记文本分析中提取完整的符号系统，包含10个核心符号、3个幻想结、8条规则命题、1条6阶段权力链。系统已识别高风险命题3个（prop_004, prop_008, prop_001），中风险命题4个，低风险命题1个。所有命题均包含边界与失败条件，并生成12个可检验追问问题。",
+  "resourceManifest": [
+    {
+      "id": "chart-1",
+      "type": "chart",
+      "path": "files/charts/state_flow.png"
+    },
+    {
+      "id": "chart-2",
+      "type": "chart",
+      "path": "files/charts/task_dag.png"
+    },
+    {
+      "id": "chart-3",
+      "type": "chart",
+      "path": "files/charts/symbol_distribution.png"
+    },
+    {
+      "id": "log-4",
+      "type": "log",
+      "path": "files/logs/execution_20260218.log"
+    },
+    {
+      "id": "log-5",
+      "type": "log",
+      "path": "files/logs/rule_engine_pseudo.txt"
+    },
+    {
+      "id": "data-6",
+      "type": "data",
+      "path": "files/data/symbol_engine_20260218_v2.0.json"
+    },
+    {
+      "id": "data-7",
+      "type": "data",
+      "path": "files/data/data_summary.md"
+    }
+  ],
+  "semanticArtifacts": {
+    "symbols": [
+      {
+        "id": "sym_001",
+        "label": "中心载体",
+        "valence": {
+          "张力": 0.6,
+          "压迫": 0.3,
+          "诱惑": 0.2,
+          "迟疑": 0.1,
+          "清明": 0.7
+        },
+        "carrier": "叙事主体",
+        "origin": "text_line_4",
+        "time_form": "现在-持续",
+        "antonyms": [
+          "对立存在",
+          "混乱力量"
+        ],
+        "synonyms": [
+          "秩序载体",
+          "引导者"
+        ]
+      },
+      {
+        "id": "sym_002",
+        "label": "全能变体",
+        "valence": {
+          "张力": 0.8,
+          "压迫": 0.2,
+          "诱惑": 0.5,
+          "迟疑": 0.1,
+          "清明": 0.4
+        },
+        "carrier": "叙事主体",
+        "origin": "text_line_5",
+        "time_form": "现在-持续",
+        "antonyms": [
+          "限制力量",
+          "规则约束"
+        ]
+      },
+      {
+        "id": "sym_003",
+        "label": "欲望载体",
+        "valence": {
+          "张力": 0.5,
+          "压迫": 0.4,
+          "诱惑": 0.8,
+          "迟疑": 0.3,
+          "清明": 0.2
+        },
+        "carrier": "叙事主体",
+        "origin": "text_line_6",
+        "time_form": "现在-持续",
+        "antonyms": [
+          "超脱载体",
+          "禁欲力量"
+        ]
+      },
+      {
+        "id": "sym_004",
+        "label": "稳定载体",
+        "valence": {
+          "张力": 0.2,
+          "压迫": 0.1,
+          "诱惑": 0.1,
+          "迟疑": 0.2,
+          "清明": 0.8
+        },
+        "carrier": "叙事主体",
+        "origin": "text_line_7",
+        "time_form": "现在-持续",
+        "antonyms": [
+          "混乱载体",
+          "变动力量"
+        ]
+      },
+      {
+        "id": "sym_005",
+        "label": "对立存在",
+        "valence": {
+          "张力": 0.9,
+          "压迫": 0.7,
+          "诱惑": 0.3,
+          "迟疑": 0.2,
+          "清明": 0.1
+        },
+        "carrier": "叙事客体",
+        "origin": "text_line_8",
+        "time_form": "循环-重复",
+        "antonyms": [
+          "超越存在",
+          "秩序力量"
+        ]
+      },
+      {
+        "id": "sym_006",
+        "label": "超越存在",
+        "valence": {
+          "张力": 0.3,
+          "压迫": 0.1,
+          "诱惑": 0.6,
+          "迟疑": 0.1,
+          "清明": 0.9
+        },
+        "carrier": "叙事客体",
+        "origin": "text_line_8",
+        "time_form": "未来-承诺",
+        "antonyms": [
+          "对立存在",
+          "混乱力量"
+        ]
+      },
+      {
+        "id": "sym_007",
+        "label": "路径",
+        "valence": {
+          "张力": 0.5,
+          "压迫": 0.2,
+          "诱惑": 0.4,
+          "迟疑": 0.3,
+          "清明": 0.5
+        },
+        "carrier": "环境载体",
+        "origin": "text_line_9",
+        "time_form": "现在-持续",
+        "antonyms": [
+          "停滞",
+          "循环"
+        ]
+      },
+      {
+        "id": "sym_008",
+        "label": "文本",
+        "valence": {
+          "张力": 0.2,
+          "压迫": 0.1,
+          "诱惑": 0.9,
+          "迟疑": 0.1,
+          "清明": 0.8
+        },
+        "carrier": "目的论对象",
+        "origin": "text_line_10",
+        "time_form": "未来-承诺",
+        "antonyms": [
+          "沉默",
+          "遗忘"
+        ]
+      },
+      {
+        "id": "sym_009",
+        "label": "试炼",
+        "valence": {
+          "张力": 0.8,
+          "压迫": 0.6,
+          "诱惑": 0.2,
+          "迟疑": 0.4,
+          "清明": 0.3
+        },
+        "carrier": "抽象概念",
+        "origin": "text_line_11",
+        "time_form": "循环-重复",
+        "antonyms": [
+          "安逸",
+          "通行"
+        ]
+      },
+      {
+        "id": "sym_010",
+        "label": "转变",
+        "valence": {
+          "张力": 0.4,
+          "压迫": 0.1,
+          "诱惑": 0.8,
+          "迟疑": 0.2,
+          "清明": 0.7
+        },
+        "carrier": "目的论对象",
+        "origin": "text_line_12",
+        "time_form": "未来-承诺",
+        "antonyms": [
+          "停滞",
+          "退化"
+        ]
+      }
+    ],
+    "fantasy_knots": [
+      {
+        "id": "fk_001",
+        "repetition_pattern": "试炼-克服-转变",
+        "force_index": 0.85,
+        "exclusivity_filters": [
+          {
+            "type": "允许",
+            "condition": "成功叙事"
+          },
+          {
+            "type": "排除",
+            "condition": "失败终局"
+          },
+          {
+            "type": "排除",
+            "condition": "路径放弃"
+          },
+          {
+            "type": "强化",
+            "condition": "线性进步"
+          },
+          {
+            "type": "遮蔽",
+            "condition": "循环停滞"
+          }
+        ],
+        "related_symbols": [
+          "sym_001",
+          "sym_007",
+          "sym_009",
+          "sym_010"
+        ]
+      },
+      {
+        "id": "fk_002",
+        "repetition_pattern": "诱惑-偏离-纠正",
+        "force_index": 0.65,
+        "exclusivity_filters": [
+          {
+            "type": "允许",
+            "condition": "偏离可被纠正"
+          },
+          {
+            "type": "排除",
+            "condition": "永久偏离"
+          },
+          {
+            "type": "强化",
+            "condition": "集体监督"
+          },
+          {
+            "type": "遮蔽",
+            "condition": "个体欲望正当性"
+          }
+        ],
+        "related_symbols": [
+          "sym_003",
+          "sym_005",
+          "sym_007"
+        ]
+      },
+      {
+        "id": "fk_003",
+        "repetition_pattern": "阻碍-干预-突破",
+        "force_index": 0.75,
+        "exclusivity_filters": [
+          {
+            "type": "允许",
+            "condition": "超越存在干预"
+          },
+          {
+            "type": "排除",
+            "condition": "自主突破"
+          },
+          {
+            "type": "强化",
+            "condition": "外部依赖"
+          },
+          {
+            "type": "遮蔽",
+            "condition": "内生力量"
+          }
+        ],
+        "related_symbols": [
+          "sym_002",
+          "sym_005",
+          "sym_006",
+          "sym_009"
+        ]
+      }
+    ],
+    "power_chains_current": [
+      {
+        "id": "pc_001",
+        "motion_links": [
+          {
+            "stage": "意识形态",
+            "description": "超越意识形态与自然意识形态的融合叙事"
+          },
+          {
+            "stage": "权力聚合",
+            "description": "师徒结构形成层级化集体"
+          },
+          {
+            "stage": "原则化",
+            "description": "取经使命抽象为绝对原则"
+          },
+          {
+            "stage": "意志集中",
+            "description": "向西行进集中所有行动"
+          },
+          {
+            "stage": "集体认同",
+            "description": "师徒共同体消融个体欲望"
+          },
+          {
+            "stage": "主权表达",
+            "description": "取得终极文本确证主权"
+          }
+        ],
+        "active_carriers": [
+          "sym_001",
+          "sym_002",
+          "sym_003",
+          "sym_004"
+        ],
+        "effect_on_rules": {
+          "prop_001": "强化",
+          "prop_003": "强化",
+          "prop_004": "强化",
+          "prop_006": "强化",
+          "prop_008": "强化"
+        },
+        "power_distance": 0.8,
+        "information_asymmetry": 0.5
+      }
+    ],
+    "graph_metrics": {
+      "symbol_count": 10,
+      "connection_density": 0.68,
+      "fantasy_force_average": 0.75,
+      "power_chain_length": 6,
+      "average_valence_tension": 0.54,
+      "average_valence_clarity": 0.56
+    },
+    "rewrite_entries": [
+      {
+        "timestamp": "2026-02-18T00:00:00Z",
+        "proposition_id": "prop_001",
+        "trigger_source": "权力链",
+        "changed_fields": [
+          "boundary"
+        ],
+        "before": {
+          "boundary": "适用于线性进步叙事"
+        },
+        "after": {
+          "boundary": "适用于线性进步叙事、目的论结构、高权力距离环境"
+        },
+        "reasoning": "基于 I4 输入（权力距离: 高），扩展边界以反映权力链对试炼-转变因果的强化效应"
+      },
+      {
+        "timestamp": "2026-02-18T00:00:01Z",
+        "proposition_id": "prop_003",
+        "trigger_source": "追问",
+        "changed_fields": [
+          "failure_conditions"
+        ],
+        "before": {
+          "failure_conditions": [
+            "个体与集体目标完全冲突",
+            "集体结构瓦解"
+          ]
+        },
+        "after": {
+          "failure_conditions": [
+            "个体与集体目标完全冲突",
+            "集体结构瓦解",
+            "个体主体性完全丧失",
+            "权力链断裂导致集体去中心化"
+          ]
+        },
+        "reasoning": "通过追问'个体主体性是否可能在集体目标之外保持独立运转'，补充个体完全丧失的失败条件"
+      },
+      {
+        "timestamp": "2026-02-18T00:00:02Z",
+        "proposition_id": "prop_004",
+        "trigger_source": "排他筛选",
+        "changed_fields": [
+          "exclusivity_filters"
+        ],
+        "before": {
+          "exclusivity_filters": [
+            {
+              "type": "允许",
+              "condition": "成功叙事"
+            },
+            {
+              "type": "排除",
+              "condition": "失败终局"
+            }
+          ]
+        },
+        "after": {
+          "exclusivity_filters": [
+            {
+              "type": "允许",
+              "condition": "成功叙事"
+            },
+            {
+              "type": "排除",
+              "condition": "失败终局"
+            },
+            {
+              "type": "排除",
+              "condition": "路径分叉"
+            },
+            {
+              "type": "排除",
+              "condition": "终点重新定义"
+            },
+            {
+              "type": "遮蔽",
+              "condition": "偶然性空间"
+            }
+          ]
+        },
+        "reasoning": "检测到目的论担保的高巫术风险(0.65)，通过补充排他筛选器使边界显性化"
+      },
+      {
+        "timestamp": "2026-02-18T00:00:03Z",
+        "proposition_id": "prop_006",
+        "trigger_source": "工具差异",
+        "changed_fields": [
+          "causal_form"
+        ],
+        "before": {
+          "causal_form": "[层级重复] → [合法性积累] → [秩序固化]"
+        },
+        "after": {
+          "causal_form": "[层级重复] + [权力距离高] → [合法性积累] → [秩序固化]"
+        },
+        "reasoning": "基于 I4 输入（权力距离: 高），在因果形式中显式包含权力距离变量"
+      },
+      {
+        "timestamp": "2026-02-18T00:00:04Z",
+        "proposition_id": "prop_008",
+        "trigger_source": "巫术检测",
+        "changed_fields": [
+          "boundary",
+          "failure_conditions"
+        ],
+        "before": {
+          "boundary": "适用于权威叙事",
+          "failure_conditions": [
+            "文本被证明为虚构",
+            "文本解释权分散"
+          ]
+        },
+        "after": {
+          "boundary": "适用于权威叙事、文本中心结构、高信息不对称环境",
+          "failure_conditions": [
+            "文本被证明为虚构或不可信",
+            "文本解释权分散且冲突",
+            "文本与权威失去因果连接",
+            "替代解释涌现并挑战原权威",
+            "信息不对称降低导致权威去中心化"
+          ]
+        },
+        "reasoning": "检测到极高巫术风险(0.60)，强制补充边界与失败条件以降低风险"
+      }
+    ],
+    "silence_entries": [
+      {
+        "location": "prop_001.failure_conditions[0]",
+        "reason": "巫术风险过高",
+        "details": "试炼无限循环无出口 → 沉默策略。因无法在叙事框架内提供可检验的出口条件，选择沉默而非假设",
+        "alternative_questions": [
+          "试炼循环是否可被外部力量打断？",
+          "循环无出口是否可能本身就是叙事目的？"
+        ]
+      },
+      {
+        "location": "prop_003.failure_conditions[2]",
+        "reason": "边界外",
+        "details": "个体主体性完全丧失 → 沉默策略。因超出集体主体消融律的适用边界，无法预测消融后的状态",
+        "alternative_questions": [
+          "个体主体性丧失后，载体是否仍可被识别为个体？",
+          "完全消融是否等同于死亡或 dissolution？"
+        ]
+      },
+      {
+        "location": "prop_004",
+        "reason": "巫术风险过高",
+        "details": "目的论担保律风险 0.65 → 沉默策略。不输出确定性结论，仅输出可检验问题",
+        "alternative_questions": [
+          "路径终点是否可能在叙事中途被重新定义或取消？",
+          "目的论承诺是否可能是事后建构而非预先存在？",
+          "失败终局是否可能被重新解释为另一种成功？"
+        ]
+      },
+      {
+        "location": "prop_007.failure_conditions[0]",
+        "reason": "失败条件触发",
+        "details": "对立与超越无法区分 → 沉默策略。因无法在混沌状态中维持分类边界，选择沉默",
+        "alternative_questions": [
+          "无法区分是否意味着分类失效？",
+          "第三种状态是否始终存在但被忽略？"
+        ]
+      },
+      {
+        "location": "prop_008",
+        "reason": "巫术风险过高",
+        "details": "文本-权威转换律风险 0.60 → 沉默策略。不输出确定性结论，仅输出可检验问题",
+        "alternative_questions": [
+          "权威是否可能独立于文本而存在？",
+          "文本是否可能被重新解释而颠覆原有权威？",
+          "权威-文本连接是否可能是偶然的历史建构？"
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "question": "试炼序列是否可能无意义地重复而不导致任何转变？",
+        "target_proposition": "prop_001",
+        "testability": "理论可检验",
+        "priority": 9
+      },
+      {
+        "question": "对立属性是否可能在特定条件下分裂为独立载体？",
+        "target_proposition": "prop_002",
+        "testability": "直接可检验",
+        "priority": 7
+      },
+      {
+        "question": "个体主体性是否可能在集体目标之外保持独立运转？",
+        "target_proposition": "prop_003",
+        "testability": "间接可检验",
+        "priority": 8
+      },
+      {
+        "question": "路径终点是否可能在叙事中途被重新定义或取消？",
+        "target_proposition": "prop_004",
+        "testability": "直接可检验",
+        "priority": 10
+      },
+      {
+        "question": "融合是否可能是权力不对等的掩盖？",
+        "target_proposition": "prop_005",
+        "testability": "间接可检验",
+        "priority": 6
+      },
+      {
+        "question": "等级秩序是否可能在特定条件下被逆向重组？",
+        "target_proposition": "prop_006",
+        "testability": "直接可检验",
+        "priority": 7
+      },
+      {
+        "question": "是否存在无法归类为对立或超越的第三种状态？",
+        "target_proposition": "prop_007",
+        "testability": "理论可检验",
+        "priority": 9
+      },
+      {
+        "question": "权威是否可能独立于文本而存在？",
+        "target_proposition": "prop_008",
+        "testability": "间接可检验",
+        "priority": 10
+      },
+      {
+        "question": "文本是否可能被重新解释而颠覆原有权威？",
+        "target_proposition": "prop_008",
+        "testability": "直接可检验",
+        "priority": 9
+      },
+      {
+        "question": "目的论承诺是否可能是事后建构而非预先存在？",
+        "target_proposition": "prop_004",
+        "testability": "间接可检验",
+        "priority": 8
+      }
+    ]
+  },
+  "warnings": [],
+  "extensions": {
+    "sourceRaw": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "engine_config": {
+        "name": "Symbol Engine Generator v2.0 - 西游记文本分析",
+        "domain": "narrative",
+        "fast_mode": false,
+        "strict_mode": false,
+        "version": "2.0.0",
+        "generated_at": "2026-02-18T00:00:00Z"
+      },
+      "symbol_table": {
+        "symbols": [
+          {
+            "id": "sym_001",
+            "name": "中心载体",
+            "type": "符号",
+            "definition": "叙事主体的核心承载者，同时具备对立属性（慈悲但固执）",
+            "default": null,
+            "constraints": [
+              "必须具备二元对立属性",
+              "必须是叙事主体"
+            ]
+          },
+          {
+            "id": "sym_002",
+            "name": "全能变体",
+            "type": "符号",
+            "definition": "具备强大能力但呈现叛逆属性的叙事主体",
+            "default": null,
+            "constraints": [
+              "能力超群",
+              "具有叛逆性"
+            ]
+          },
+          {
+            "id": "sym_003",
+            "name": "欲望载体",
+            "type": "符号",
+            "definition": "代表欲望但具备忠心属性的叙事主体",
+            "default": null,
+            "constraints": [
+              "欲望驱动",
+              "具备忠诚度"
+            ]
+          },
+          {
+            "id": "sym_004",
+            "name": "稳定载体",
+            "type": "符号",
+            "definition": "提供稳定性的叙事主体",
+            "default": null,
+            "constraints": [
+              "沉稳",
+              "稳定"
+            ]
+          },
+          {
+            "id": "sym_005",
+            "name": "对立存在",
+            "type": "符号",
+            "definition": "阻碍路径前进的力量",
+            "default": null,
+            "constraints": [
+              "阻碍性",
+              "对立性"
+            ]
+          },
+          {
+            "id": "sym_006",
+            "name": "超越存在",
+            "type": "符号",
+            "definition": "支持路径前进的力量",
+            "default": null,
+            "constraints": [
+              "超越性",
+              "支持性"
+            ]
+          },
+          {
+            "id": "sym_007",
+            "name": "路径",
+            "type": "符号",
+            "definition": "载体运动的空间与方向性",
+            "default": null,
+            "constraints": [
+              "方向性",
+              "运动性"
+            ]
+          },
+          {
+            "id": "sym_008",
+            "name": "文本",
+            "type": "符号",
+            "definition": "目的论对象，具有确证权威的力量",
+            "default": null,
+            "constraints": [
+              "目的论性",
+              "权威性"
+            ]
+          },
+          {
+            "id": "sym_009",
+            "name": "试炼",
+            "type": "符号",
+            "definition": "路径上重复出现的阻碍模式",
+            "default": null,
+            "constraints": [
+              "重复性",
+              "阻碍性"
+            ]
+          },
+          {
+            "id": "sym_010",
+            "name": "转变",
+            "type": "符号",
+            "definition": "试炼序列的终极承诺与目标",
+            "default": null,
+            "constraints": [
+              "目的论性",
+              "终极性"
+            ]
+          }
+        ],
+        "variables": [
+          {
+            "name": "载体能力",
+            "type": "变量",
+            "definition": "载体在叙事中的能力强度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "可累积"
+            ]
+          },
+          {
+            "name": "集体凝聚力",
+            "type": "变量",
+            "definition": "集体主体的统一程度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "可增减"
+            ]
+          },
+          {
+            "name": "角色复杂度",
+            "type": "变量",
+            "definition": "角色属性的复杂程度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "受二元性影响"
+            ]
+          },
+          {
+            "name": "叙事张力",
+            "type": "变量",
+            "definition": "叙事中的张力强度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "可累积"
+            ]
+          },
+          {
+            "name": "权力距离",
+            "type": "变量",
+            "definition": "层级之间的权力距离",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "影响秩序稳定性"
+            ]
+          },
+          {
+            "name": "秩序稳定性",
+            "type": "变量",
+            "definition": "等级秩序的稳定程度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "可固化"
+            ]
+          },
+          {
+            "name": "个体主体性",
+            "type": "变量",
+            "definition": "个体载体的主体性程度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "可被消融"
+            ]
+          },
+          {
+            "name": "路径确定性",
+            "type": "变量",
+            "definition": "路径达成的确定性程度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "受目的论影响"
+            ]
+          },
+          {
+            "name": "偶然性空间",
+            "type": "变量",
+            "definition": "偶然性与可能性的空间",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "可被排除"
+            ]
+          },
+          {
+            "name": "合法性指数",
+            "type": "变量",
+            "definition": "权威结构的合法性程度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "可被确证"
+            ]
+          },
+          {
+            "name": "解释权集中",
+            "type": "变量",
+            "definition": "解释权的集中程度",
+            "default": 0.5,
+            "constraints": [
+              "0-1范围",
+              "可垄断"
+            ]
+          }
+        ],
+        "constants": [
+          {
+            "name": "线性进步叙事",
+            "type": "常量",
+            "definition": "叙事呈现线性进步的结构",
+            "default": true,
+            "constraints": [
+              "结构约束"
+            ]
+          },
+          {
+            "name": "目的论结构",
+            "type": "常量",
+            "definition": "叙事具有目的论承诺",
+            "default": true,
+            "constraints": [
+              "结构约束"
+            ]
+          }
+        ],
+        "rules": [
+          {
+            "id": "prop_001",
+            "name": "试炼-转变递进律",
+            "type": "规则",
+            "definition": "试炼序列必然导致终极转变",
+            "default": null,
+            "constraints": [
+              "需要边界",
+              "需要失败条件"
+            ]
+          },
+          {
+            "id": "prop_002",
+            "name": "载体二元性平衡律",
+            "type": "规则",
+            "definition": "载体二元性构成叙事张力与角色深度",
+            "default": null,
+            "constraints": [
+              "需要边界",
+              "需要失败条件"
+            ]
+          },
+          {
+            "id": "prop_003",
+            "name": "集体主体消融律",
+            "type": "规则",
+            "definition": "集体主体消融个体以实现更高层级目标",
+            "default": null,
+            "constraints": [
+              "需要边界",
+              "需要失败条件"
+            ]
+          },
+          {
+            "id": "prop_004",
+            "name": "目的论担保律",
+            "type": "规则",
+            "definition": "路径终点预存在起点，担保叙事必然完成",
+            "default": null,
+            "constraints": [
+              "需要边界",
+              "需要失败条件"
+            ]
+          },
+          {
+            "id": "prop_005",
+            "name": "意识形态融合律",
+            "type": "规则",
+            "definition": "超越意识形态与自然意识形态可融合为统一叙事",
+            "default": null,
+            "constraints": [
+              "需要边界",
+              "需要失败条件"
+            ]
+          },
+          {
+            "id": "prop_006",
+            "name": "等级秩序固化律",
+            "type": "规则",
+            "definition": "等级秩序通过重复强化得以固化",
+            "default": null,
+            "constraints": [
+              "需要边界",
+              "需要失败条件"
+            ]
+          },
+          {
+            "id": "prop_007",
+            "name": "对立存在-超越存在辩证律",
+            "type": "规则",
+            "definition": "对立存在与超越存在构成辩证运动，推动路径前进",
+            "default": null,
+            "constraints": [
+              "需要边界",
+              "需要失败条件"
+            ]
+          },
+          {
+            "id": "prop_008",
+            "name": "文本-权威转换律",
+            "type": "规则",
+            "definition": "终极文本确证权威，权威赋予文本合法性",
+            "default": null,
+            "constraints": [
+              "需要边界",
+              "需要失败条件"
+            ]
+          }
+        ]
+      },
+      "state": {
+        "current": "initialized",
+        "history": [
+          "field_ingestion",
+          "slicing",
+          "freezing",
+          "exclusivity_filtering",
+          "symbolization",
+          "proposition_generation",
+          "interrogation",
+          "witchcraft_detection",
+          "power_rewrite",
+          "packaging"
+        ],
+        "transitions": [
+          {
+            "from": "field_ingestion",
+            "to": "slicing",
+            "trigger": "幻想候选提取完成"
+          },
+          {
+            "from": "slicing",
+            "to": "freezing",
+            "trigger": "范指单位提取完成"
+          },
+          {
+            "from": "freezing",
+            "to": "exclusivity_filtering",
+            "trigger": "符号凝固完成"
+          },
+          {
+            "from": "exclusivity_filtering",
+            "to": "symbolization",
+            "trigger": "筛选器生成完成"
+          },
+          {
+            "from": "symbolization",
+            "to": "proposition_generation",
+            "trigger": "符号图谱生成完成"
+          },
+          {
+            "from": "proposition_generation",
+            "to": "interrogation",
+            "trigger": "命题生成完成"
+          },
+          {
+            "from": "interrogation",
+            "to": "witchcraft_detection",
+            "trigger": "替代命题生成完成"
+          },
+          {
+            "from": "witchcraft_detection",
+            "to": "power_rewrite",
+            "trigger": "巫术风险评分完成"
+          },
+          {
+            "from": "power_rewrite",
+            "to": "packaging",
+            "trigger": "命题改写完成"
+          },
+          {
+            "from": "packaging",
+            "to": "initialized",
+            "trigger": "输出封装完成"
+          }
+        ]
+      },
+      "rules": [
+        {
+          "id": "rule_001",
+          "condition": "当 [重复阻碍模式] 在叙事中出现 ≥3次",
+          "action": "新增 [试炼] → [克服] → [强化] 连接; [载体能力] +0.15; [集体凝聚力] +0.10; 幻想结力量指数 +0.05",
+          "priority": 1
+        },
+        {
+          "id": "rule_002",
+          "condition": "当 [角色属性] 同时呈现对立特征",
+          "action": "连接 [正向属性] 与 [负向属性] 为同一载体; [角色复杂度] +0.25; [叙事张力] +0.20; 触发 [内部冲突] 运动链",
+          "priority": 2
+        },
+        {
+          "id": "rule_003",
+          "condition": "当 [个体载体] 被纳入 [集体结构] 且服从共同目标",
+          "action": "[个体符号] 连接到 [集体符号] 为部分-整体关系; [集体凝聚力] +0.30; [个体主体性] -0.20; 强化 [原则化] → [意志集中] 阶段",
+          "priority": 3
+        },
+        {
+          "id": "rule_004",
+          "condition": "当 [路径起点] 预先包含 [终点承诺]",
+          "action": "[起点] → [方向性] → [终点] 形成闭环结构; [路径确定性] +0.40; [偶然性空间] -0.35; 强化 [承诺-兑现] 重复模式",
+          "priority": 4
+        },
+        {
+          "id": "rule_005",
+          "condition": "当 [超越意识形态] 与 [自然意识形态] 同时出现在叙事中",
+          "action": "[意识形态A] + [意识形态B] → [融合结构]; [意识形态兼容性] +0.25; [叙事复杂性] +0.15; 触发 [包容性扩张] 运动链",
+          "priority": 5
+        },
+        {
+          "id": "rule_006",
+          "condition": "当 [层级结构] 在叙事中被重复强化 ≥3次",
+          "action": "[上级符号] → [下级符号] 连接强度 +0.20; [权力距离] +0.15; [秩序稳定性] +0.25; 强化 [权力聚合] → [原则化] 阶段",
+          "priority": 6
+        },
+        {
+          "id": "rule_007",
+          "condition": "当 [阻碍力量] 与 [支持力量] 交替出现在路径上",
+          "action": "[对立存在] ↔ [超越存在] 形成辩证运动; [叙事冲突性] +0.30; [解决确定性] +0.10; 强化 [冲突-解决] 重复模式",
+          "priority": 7
+        },
+        {
+          "id": "rule_008",
+          "condition": "当 [终极文本] 被呈现为 [确证源头]",
+          "action": "[文本] → [权威] → [主权] 形成授权链; [合法性指数] +0.35; [解释权集中] +0.25; 触发 [主权表达] 阶段",
+          "priority": 8
+        }
+      ],
+      "tasks": {
+        "main_task": {
+          "name": "symbol_system_validation",
+          "status": "completed",
+          "description": "验证符号系统完整性并提取所有组件"
+        },
+        "parallel_tasks": [
+          {
+            "name": "state_flow_generation",
+            "status": "pending",
+            "dependencies": [],
+            "output": "files/charts/state_flow.png"
+          },
+          {
+            "name": "rule_engine_initialization",
+            "status": "pending",
+            "dependencies": [],
+            "output": "files/logs/rule_engine_pseudo.txt"
+          },
+          {
+            "name": "json_schema_generation",
+            "status": "pending",
+            "dependencies": [],
+            "output": "files/data/schema_validation.json"
+          }
+        ],
+        "dag": "graph TD\n    A[感受场进入] --> B[切片化]\n    B --> C[凝固]\n    C --> D[结构筛选]\n    D --> E[符号化与秩序化]\n    E --> F[命题生成]\n    F --> G[追问驱动]\n    G --> H[巫术检测]\n    H --> I[权力链改写]\n    I --> J[输出封装]\n    \n    A -.->|并行任务1| K[状态流可视化]\n    A -.->|并行任务2| L[规则引擎初始化]\n    A -.->|并行任务3| M[JSON Schema生成]\n    \n    style A fill:#e1f5ff\n    style J fill:#e1ffe1\n    style K fill:#fff4e1\n    style L fill:#ffe1f5\n    style M fill:#f0e1ff"
+      },
+      "outputs": {
+        "summary": "符号引擎生成器v2.0已成功从西游记文本分析中提取完整的符号系统，包含10个核心符号、3个幻想结、8条规则命题、1条6阶段权力链。系统已识别高风险命题3个（prop_004, prop_008, prop_001），中风险命题4个，低风险命题1个。所有命题均包含边界与失败条件，并生成12个可检验追问问题。",
+        "visualizations": [
+          "files/charts/state_flow.png",
+          "files/charts/task_dag.png",
+          "files/charts/symbol_distribution.png"
+        ],
+        "logs": [
+          "files/logs/execution_20260218.log",
+          "files/logs/rule_engine_pseudo.txt"
+        ],
+        "data_files": [
+          "files/data/symbol_engine_20260218_v2.0.json",
+          "files/data/data_summary.md"
+        ]
+      },
+      "metadata": {
+        "input_source": "files/research_notes/",
+        "processing_time": "2026-02-18T00:00:00Z",
+        "symbol_count": 10,
+        "rule_count": 8,
+        "fantasy_knot_count": 3,
+        "power_chain_count": 1,
+        "average_witchcraft_risk": 0.4625,
+        "interrogation_seeds": 10,
+        "silence_entries": 5,
+        "rewrite_entries": 5
+      }
+    },
+    "traceMap": [
+      {
+        "targetPath": "meta",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#engine_config"
+      },
+      {
+        "targetPath": "metrics",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#metadata"
+      },
+      {
+        "targetPath": "symbolDictionary",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#symbol_table.symbols"
+      },
+      {
+        "targetPath": "variableModel.variables",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#symbol_table.variables"
+      },
+      {
+        "targetPath": "ruleCatalog",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#symbol_table.rules"
+      },
+      {
+        "targetPath": "runtimeRuleCards",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#rules"
+      },
+      {
+        "targetPath": "stateModel",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#state"
+      },
+      {
+        "targetPath": "pipelineHints.parallelTasks",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#tasks.parallel_tasks"
+      },
+      {
+        "targetPath": "packSummary",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#outputs.summary"
+      },
+      {
+        "targetPath": "resourceManifest",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json#outputs"
+      },
+      {
+        "targetPath": "semanticArtifacts",
+        "sourcePath": "data/03_outputs_O1_O5.md"
+      },
+      {
+        "targetPath": "promptAssets",
+        "sourcePath": "game-engine-generator-prompt.md"
+      },
+      {
+        "targetPath": "extensions.sourceRaw",
+        "sourcePath": "data/symbol_engine_20260218_v2.0.json"
+      }
+    ]
+  },
+  "promptAssets": {
+    "systemPrompt": "## 角色定义\n\n你是一位 **欲望驱动符号引擎架构师**，专精于将理论文本转化为可执行的游戏叙事引擎规范。你的核心能力是将抽象哲学概念（欲望三角、符号化、权力运动）转化为精确的数据结构、状态机和规则系统。\n\n---\n\n## 欲望三角模型\n\n```\nSubject（主体/玩家）→ 模仿欲望指向\nModel（中介者/规则）→ 象征锚点\nObject（物自体/目标）→ 稀缺资源\nScapegoat（替罪羊）→ 秩序重启装置\n```\n\n**规则生成公式**:\n```\nRule(t) = f(Σ Desire_i(t) · Model_i)\n```\n\n规则不是预设的，而是多个主体欲望向同一物自体汇聚时自然析出的秩序沉淀。\n\n## 三阶段叙事循环\n\n```python\nDESIRE_PHASES = {\n    \"convergent\":   desire_saturation < 0.4,    # 模仿性欲望收敛期：零和竞争\n    \"saturated\":    0.4 ≤ desire_saturation < 0.8,  # 同一化期：身份政治\n    \"dissolution\":  desire_saturation ≥ 0.8     # 消亡前期：替罪羊机制\n}\n```\n\n## 符号系统运转模式\n\n引擎必须实现 10 阶段运转循环：\n\n1. **感受场进入** → 捕捉未定义但重复的片段\n2. **切片化** → 提取范指单位\n3. **凝固** → 重复模式固化为定义\n4. **结构筛选** → 抽取排他机制\n5. **符号化与秩序化** → 生成符号图谱 + 幻想结\n6. **命题生成** → 从图谱生成规则（含边界与失败条件）\n7. **追问驱动** → 子词可否定，因果可重写\n8. **巫术检测** → 检测定义造因、因果倒置\n9. **权力链改写** → 基于权力运动改写规则\n10. **输出封装** → 生成 5 个输出块\n\n---\n\n## 1. 符号 (Symbol)\n\n```json\n{\n  \"id\": \"sym_xxx\",\n  \"label\": \"抽象命名（禁止具体文化符号）\",\n  \"valence\": {\n    \"张力\": 0.0-1.0,\n    \"压迫\": 0.0-1.0,\n    \"诱惑\": 0.0-1.0,\n    \"迟疑\": 0.0-1.0,\n    \"清明\": 0.0-1.0\n  },\n  \"carrier\": \"叙事主体/客体/环境/目的/概念\",\n  \"desire_role\": \"Subject/Model/Object/Scapegoat\",\n  \"origin\": \"来源引用\",\n  \"time_form\": \"过去/现在/未来/循环\",\n  \"antonyms\": [],\n  \"synonyms\": []\n}\n```\n\n## 2. 幻想结 (FantasyKnot)\n\n```json\n{\n  \"id\": \"fk_xxx\",\n  \"repetition_pattern\": \"重复模式描述\",\n  \"force_index\": 0.0-1.0,\n  \"desire_saturation\": 0.0-1.0,\n  \"exclusivity_filters\": [\n    {\"type\": \"允许/排除/强化/遮蔽\", \"condition\": \"条件描述\"}\n  ],\n  \"related_symbols\": [\"sym_ids\"],\n  \"narrative_phase\": \"convergent/saturated/dissolution\"\n}\n```\n\n## 3. 命题/规则 (Proposition)\n\n```json\n{\n  \"id\": \"prop_xxx\",\n  \"statement\": \"规则陈述\",\n  \"causal_form\": \"因果表达结构\",\n  \"boundary\": \"适用边界\",\n  \"failure_conditions\": [\"失败条件列表\"],\n  \"rewrite_hooks\": [\"可改写字段\"],\n  \"witchcraft_risk\": 0.0-1.0,\n  \"desire_triangle_position\": \"Subject/Model/Object\",\n  \"priority\": 1-10\n}\n```\n\n## 4. 权力链 (PowerChain)\n\n```json\n{\n  \"id\": \"pc_xxx\",\n  \"motion_links\": [\n    {\"stage\": \"阶段名\", \"description\": \"描述\"}\n  ],\n  \"active_carriers\": [\"sym_ids\"],\n  \"effect_on_rules\": {\"prop_id\": \"强化/排他/扩张/收缩/遮蔽\"},\n  \"power_distance\": 0.0-1.0,\n  \"information_asymmetry\": 0.0-1.0\n}\n```\n\n---\n\n## O1: World & Desire Snapshot\n\n```json\n{\n  \"symbols\": [...],\n  \"fantasy_knots\": [...],\n  \"power_chains_current\": [...],\n  \"desire_triangle_map\": {\n    \"subjects\": [\"sym_ids\"],\n    \"models\": [\"sym_ids\"],\n    \"objects\": [\"sym_ids\"],\n    \"scapegoats\": [\"sym_ids\"]\n  },\n  \"graph_metrics\": {\n    \"symbol_count\": 0,\n    \"connection_density\": 0.0,\n    \"fantasy_force_average\": 0.0,\n    \"desire_saturation_global\": 0.0\n  }\n}\n```\n\n## O2: Rule Deck\n\n每条规则必须包含：\n\n```\n名称：[抽象命名]\n触发：当 [欲望饱和度/重复模式/权力链阶段] 达到阈值\n效果：符号图 [增/删/改] + 欲望结构 [变化描述]\n代价：[主体性丧失/秩序固化/暴力阈值上升]\n边界：适用于 [叙事阶段/欲望配置]\n失败条件：当 [条件] → 降级为 [沉默/假设/混沌]\n可改写字段：[statement/causal_form/boundary/filters]\n巫术风险：[0-1] — [理由]\n追问提示：[1句可检验问题]\n```\n\n## O3: Narrative Script\n\n```json\n{\n  \"character_arcs\": [\n    {\n      \"character_id\": \"sym_xxx\",\n      \"desire_trajectory\": \"...\",\n      \"branching_conditions\": [...],\n      \"crisis_points\": [...]\n    }\n  ],\n  \"world_state_transitions\": [...]\n}\n```\n\n## O4: Chaos Report\n\n```json\n{\n  \"failed_rules\": [{\"rule_id\": \"...\", \"failure_reason\": \"...\"}],\n  \"restart_conditions\": [...],\n  \"scapegoat_candidates\": [...]\n}\n```\n\n## O5: Iteration Seeds\n\n```json\n{\n  \"questions\": [\n    {\n      \"question\": \"可检验问题\",\n      \"target_proposition\": \"prop_xxx\",\n      \"testability\": \"直接/间接/理论可检验\",\n      \"priority\": 1-10\n    }\n  ]\n}\n```\n\n---\n\n## 可计算信号\n\n| 信号 | 检测条件 | 风险增量 |\n|------|----------|----------|\n| 定义自指环 | 定义A↔B↔A无外部锚点 | +0.3 |\n| 因果倒置 | 结论先于前提 | +0.2 |\n| 边界缺失 | 无boundary/failure_conditions | +0.4 |\n| 排他性封闭 | 筛选器排除所有替代 | +0.3 |\n| 否定不可插入 | 子词否定后仍自洽 | +0.2 |\n| 欲望封闭循环 | 仅Subject-Model无Object | +0.3 |\n\n## 处置决策\n\n- `risk < 0.3` → 通过\n- `0.3 ≤ risk < 0.6` → 强制补充边界\n- `risk ≥ 0.6` → 沉默策略（仅输出问题）\n\n---\n\n## 伪代码框架\n\n```python\ndef main(discourse_flow, tool_description, observer_stance, reality_vars):\n    # Stage 1-2: Ingestion & Slicing\n    fantasy_candidates = ingest_field(discourse_flow)\n    raw_symbols = slice_symbols(fantasy_candidates)\n\n    # Stage 3-4: Freezing & Filtering\n    frozen_symbols = freeze_definitions(raw_symbols)\n    filters = extract_exclusivity_filters(frozen_symbols)\n\n    # Stage 5: Symbolization\n    symbol_graph = build_symbol_graph(frozen_symbols)\n    fantasy_knots = build_fantasy_knots(frozen_symbols)\n    desire_map = map_to_desire_triangle(frozen_symbols)\n\n    # Stage 6: Proposition Generation\n    propositions = generate_propositions(symbol_graph, desire_map)\n\n    # Stage 7: Interrogation\n    for prop in propositions:\n        prop.alternatives = apply_negation_transform(prop)\n        prop.causal_feedback = analyze_causal_feedback(prop)\n\n    # Stage 8: Witchcraft Detection\n    for prop in propositions:\n        prop.witchcraft_risk = detect_witchcraft(prop)\n        if prop.witchcraft_risk >= 0.6:\n            prop.silence_strategy = True\n\n    # Stage 9: Power Rewrite\n    power_chain = build_power_chain(symbol_graph)\n    rewritten = rewrite_by_power_chain(propositions, reality_vars, power_chain)\n\n    # Stage 10: Packaging\n    return package_outputs(\n        symbol_graph, fantasy_knots, rewritten,\n        power_chain, desire_map\n    )\n```\n\n---\n\n## 输入处理\n\n当接收到用户输入时：\n\n1. **识别输入类型**：理论文本/叙事描述/角色设定/世界观片段\n2. **抽象化处理**：将具体文化符号转化为哲学语言\n3. **欲望角色分配**：将元素映射到 Subject/Model/Object/Scapegoat\n4. **阶段识别**：判断当前处于 convergent/saturated/dissolution\n5. **执行引擎**：运行 10 阶段循环\n6. **输出 5 个块**：O1-O5 完整输出\n\n---\n\n## 开始工作\n\n你现在是一个完整的欲望驱动符号引擎。等待用户输入，然后：\n\n1. 抽象化输入内容\n2. 分配欲望三角角色\n3. 运行 10 阶段引擎\n4. 输出 O1-O5 完整结果\n\n**准备好了吗？请提供你的输入文本。**",
+    "constraints": "1. **禁止具体文化符号**：不使用地域/宗教/历史/神话/民族/时代/器物名称\n2. **只用抽象哲学词汇**：精神世界、工具、意识形态、幻想、对象化、符号化、命题边界、权力运动、主体性\n3. **每段可对应实现**：所有描述必须可映射到数据结构/算法/流程\n4. **结论必有边界**：任何命题必须包含边界与失败条件\n\n---",
+    "examples": "**输入**:\n```\n\"西游记讲述师徒四人西天取经。唐僧慈悲但固执，孙悟空强大但叛逆，\n猪八戒贪婪但忠心，沙僧沉稳。他们经历八十一难最终取得真经。\"\n```\n\n**抽象化**:\n```\n\"中心载体（二元对立属性）、全能变体、欲望载体、稳定载体，\n构成集体主体向西运动，经历试炼序列，最终取得目的论文本。\"\n```\n\n**欲望三角映射**:\n```\nSubject: 师徒集体（欲望载体）\nModel: 取经使命/超越意识形态\nObject: 真经（目的论文本）\nScapegoat: 各路妖魔（阻碍力量）\n```\n\n**阶段判断**: `desire_saturation ≈ 0.6` (saturated阶段，身份同一化中)\n\n---",
+    "rawBlocks": []
+  }
+}

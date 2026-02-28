@@ -14,6 +14,7 @@ import {
   TaskAIConfig,
   TaskName,
   TurnAIConfig,
+  TaskPromptOverrideMap,
 } from "../types";
 import { DEFAULT_TASK_CONFIGS, INITIAL_RULES, INTRO_STORY } from "../constants";
 
@@ -21,6 +22,13 @@ const localStorageStorage = createJSONStorage(() => localStorage);
 export const DEFAULT_TASK_CONFIG_SCOPE = "__default__";
 
 type TaskConfigMap = Record<string, TurnAIConfig['tasks']>;
+
+export interface EnginePackRuntimePayload {
+  id: string;
+  sourceUrl: string;
+  rules: RuleCard[];
+  promptOverrides: TaskPromptOverrideMap;
+}
 
 export interface GameStoreState extends GameState {
   loading: boolean;
@@ -38,6 +46,9 @@ export interface GameStoreState extends GameState {
   openaiConfig: OpenAIConfig;
   taskConfigScopeId: string;
   taskConfigsByCharacter: TaskConfigMap;
+  enginePack: EnginePackRuntimePayload | null;
+  enginePackStatus: 'idle' | 'loading' | 'ready' | 'error';
+  enginePackError: string | null;
 }
 
 export interface GameStoreActions {
@@ -71,6 +82,9 @@ export interface GameStoreActions {
   setTaskConfigs: (configs: TurnAIConfig['tasks']) => void;
   updateTaskConfig: (taskName: TaskName, patch: Partial<TaskAIConfig>) => void;
   resetTaskConfigs: () => void;
+  setEnginePackStatus: (status: GameStoreState['enginePackStatus']) => void;
+  setEnginePack: (pack: EnginePackRuntimePayload | null) => void;
+  setEnginePackError: (message: string | null) => void;
 }
 
 const cloneDefaultTaskConfigs = (): TurnAIConfig['tasks'] => ({
@@ -112,6 +126,9 @@ const initialState: GameStoreState = {
   taskConfigsByCharacter: {
     [DEFAULT_TASK_CONFIG_SCOPE]: cloneDefaultTaskConfigs(),
   },
+  enginePack: null,
+  enginePackStatus: 'idle',
+  enginePackError: null,
 };
 
 const resolveTaskConfigs = (state: GameStoreState): TurnAIConfig['tasks'] => {
@@ -151,8 +168,11 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
         openaiConfig: state.openaiConfig,
         taskConfigScopeId: state.taskConfigScopeId,
         taskConfigsByCharacter: state.taskConfigsByCharacter,
+        enginePack: state.enginePack,
+        enginePackStatus: state.enginePackStatus,
+        enginePackError: state.enginePackError,
       })),
-      startNewGame: (character) => set({
+      startNewGame: (character) => set((state) => ({
         phase: Phase.GAMEPLAY,
         character,
         currentStory: INTRO_STORY,
@@ -160,7 +180,7 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
         decisionHistory: [],
         turnCount: 1,
         realityStats: { credibility: 5, stress: 2, connections: 3 },
-        rules: INITIAL_RULES,
+        rules: state.enginePack?.rules?.length ? state.enginePack.rules : INITIAL_RULES,
         finalSummary: undefined,
         loading: false,
         currentTriggeredRules: [],
@@ -171,7 +191,7 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
         worldRulesLoading: false,
         ruleStatusMap: {},
         choicesLoading: false,
-      }),
+      })),
       setShowAiSettings: (show) => set({ showAiSettings: show }),
       setProvider: (provider) => set({ provider }),
       setGeminiKey: (key) => set({ geminiKey: key }),
@@ -203,6 +223,16 @@ export const gameStore = create<GameStoreState & GameStoreActions>()(
           [state.taskConfigScopeId]: cloneDefaultTaskConfigs(),
         },
       })),
+      setEnginePackStatus: (status) => set({ enginePackStatus: status }),
+      setEnginePack: (pack) => set({
+        enginePack: pack,
+        enginePackStatus: pack ? 'ready' : 'idle',
+        enginePackError: null,
+      }),
+      setEnginePackError: (message) => set({
+        enginePackError: message,
+        enginePackStatus: message ? 'error' : 'idle',
+      }),
     }),
     {
       name: "character-card-game-store",
@@ -255,6 +285,9 @@ export const useTaskConfigScopeId = () => gameStore((s) => s.taskConfigScopeId);
 export const useTaskConfigsByCharacter = () => gameStore((s) => s.taskConfigsByCharacter);
 export const useTaskConfigs = () => gameStore((s) => resolveTaskConfigs(s));
 export const useTaskConfig = (taskName: TaskName) => gameStore((s) => resolveTaskConfigs(s)[taskName]);
+export const useEnginePack = () => gameStore((s) => s.enginePack);
+export const useEnginePackStatus = () => gameStore((s) => s.enginePackStatus);
+export const useEnginePackError = () => gameStore((s) => s.enginePackError);
 
 export const useSetPhase = () => gameStore((s) => s.setPhase);
 export const useSetCharacter = () => gameStore((s) => s.setCharacter);
@@ -286,3 +319,6 @@ export const useSetTaskConfigScopeId = () => gameStore((s) => s.setTaskConfigSco
 export const useSetTaskConfigs = () => gameStore((s) => s.setTaskConfigs);
 export const useUpdateTaskConfig = () => gameStore((s) => s.updateTaskConfig);
 export const useResetTaskConfigs = () => gameStore((s) => s.resetTaskConfigs);
+export const useSetEnginePackStatus = () => gameStore((s) => s.setEnginePackStatus);
+export const useSetEnginePack = () => gameStore((s) => s.setEnginePack);
+export const useSetEnginePackError = () => gameStore((s) => s.setEnginePackError);

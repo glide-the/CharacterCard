@@ -1,6 +1,7 @@
 import { Type } from '@google/genai';
-import { AIConfig, Character, RealityMappingTaskOutput, RuleCard, TaskAIConfig } from '../types';
+import { AIConfig, Character, RealityMappingTaskOutput, RuleCard, TaskAIConfig, TaskPromptOverrides } from '../types';
 import { executeWithRetry, generateContent } from './aiEngine';
+import { applyPromptOverrides, applySystemPromptOverrides } from './promptOverrides';
 
 interface RealityMappingTaskInput {
   character: Character;
@@ -8,6 +9,7 @@ interface RealityMappingTaskInput {
   narrativeText: string;
   stats: { credibility: number; stress: number; connections: number };
   activeRules: RuleCard[];
+  promptOverrides?: TaskPromptOverrides;
 }
 
 const schema = {
@@ -63,7 +65,7 @@ export async function runRealityMappingTask(
   taskConfig: TaskAIConfig,
   input: RealityMappingTaskInput
 ): Promise<RealityMappingTaskOutput> {
-  const prompt = `
+  const basePrompt = `
 [角色]
 ${input.character.name}（${input.character.title}）
 弱点：${input.character.weakness}
@@ -83,13 +85,15 @@ ${input.activeRules.map((r) => `- ${r.title}: ${r.description}`).join('\n')}
 [任务]
 评估属性变化，给出 statUpdates 与 statAnalysis。
 `;
+  const prompt = applyPromptOverrides(basePrompt, input.promptOverrides);
+  const systemInstruction = applySystemPromptOverrides(REALITY_SYSTEM_PROMPT, input.promptOverrides);
 
   const response = await executeWithRetry(
     () => generateContent(
       { provider: provider.provider, gemini: provider.gemini, openai: provider.openai },
       {
         prompt,
-        systemInstruction: REALITY_SYSTEM_PROMPT,
+        systemInstruction,
         jsonSchema: schema,
         jsonMode: true,
       },

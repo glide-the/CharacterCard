@@ -1,12 +1,14 @@
 import { Type } from '@google/genai';
-import { AIConfig, RuleCard, TaskAIConfig, WorldRulesTaskOutput } from '../types';
+import { AIConfig, RuleCard, TaskAIConfig, WorldRulesTaskOutput, TaskPromptOverrides } from '../types';
 import { executeWithRetry, generateContent } from './aiEngine';
+import { applyPromptOverrides, applySystemPromptOverrides } from './promptOverrides';
 
 interface WorldRulesTaskInput {
   choiceText: string;
   narrativeText: string;
   rules: RuleCard[];
   turnCount: number;
+  promptOverrides?: TaskPromptOverrides;
 }
 
 const schema = {
@@ -63,7 +65,7 @@ export async function runWorldRulesTask(
   taskConfig: TaskAIConfig,
   input: WorldRulesTaskInput
 ): Promise<WorldRulesTaskOutput> {
-  const prompt = `
+  const basePrompt = `
 [回合]
 ${input.turnCount}
 
@@ -79,13 +81,15 @@ ${input.rules.map((rule) => `- id=${rule.id}, title=${rule.title}, active=${rule
 [任务]
 输出触发规则、规则状态流转、完整 ruleStatusMap。
 `;
+  const prompt = applyPromptOverrides(basePrompt, input.promptOverrides);
+  const systemInstruction = applySystemPromptOverrides(WORLD_RULES_SYSTEM_PROMPT, input.promptOverrides);
 
   const response = await executeWithRetry(
     () => generateContent(
       { provider: provider.provider, gemini: provider.gemini, openai: provider.openai },
       {
         prompt,
-        systemInstruction: WORLD_RULES_SYSTEM_PROMPT,
+        systemInstruction,
         jsonSchema: schema,
         jsonMode: true,
       },

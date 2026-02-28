@@ -7,6 +7,7 @@ import {
   TurnAIConfig,
   RealityMappingTaskOutput,
   WorldRulesTaskOutput,
+  TaskPromptOverrideMap,
 } from '../types';
 import { processTurn } from './geminiService';
 import { runNarrativeTask } from './narrativeTask';
@@ -23,6 +24,7 @@ interface OrchestratorInput {
   turnCount: number;
   maxTurns: number;
   config: TurnAIConfig;
+  promptOverrides?: TaskPromptOverrideMap;
 }
 
 export interface OrchestratorTurnResult {
@@ -48,6 +50,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
       activeRules: input.rules.filter((r) => r.active),
       turnCount: input.turnCount,
       maxTurns: input.maxTurns,
+      promptOverrides: input.promptOverrides?.narrative,
     });
 
 
@@ -63,6 +66,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
         narrativeText: narrativeText,
         stats: input.realityStats,
         activeRules: input.rules.filter((r) => r.active),
+        promptOverrides: input.promptOverrides?.realityMapping,
       }).catch(() => ({
         statUpdates: { credibility: 0, stress: 0, connections: 0 },
         statAnalysis: [],
@@ -72,6 +76,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
         narrativeText: narrativeText,
         rules: input.rules,
         turnCount: input.turnCount,
+        promptOverrides: input.promptOverrides?.worldRules,
       }).catch(() => ({
         triggeredRules: [],
         ruleUpdates: { activate: [], deactivate: [], add: [], removeIds: [] },
@@ -80,6 +85,7 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
       runChoicesTask(input.config.provider, taskConfigs.choices, {
         narrativeText: narrativeText,
         historySummary: input.historySummary,
+        promptOverrides: input.promptOverrides?.choices,
       }).catch(() => ({ choices: defaultChoices })),
     ]);
 
@@ -114,7 +120,8 @@ export async function orchestrateTurn(input: OrchestratorInput): Promise<Orchest
       input.historySummary,
       input.turnCount,
       input.maxTurns,
-      input.config.provider
+      input.config.provider,
+      input.promptOverrides?.narrative
     );
 
     return {

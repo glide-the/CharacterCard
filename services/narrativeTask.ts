@@ -1,5 +1,6 @@
-import { AIConfig, Character, NarrativeTaskOutput, RuleCard, TaskAIConfig } from '../types';
+import { AIConfig, Character, NarrativeTaskOutput, RuleCard, TaskAIConfig, TaskPromptOverrides } from '../types';
 import { executeWithRetry, generateContent } from './aiEngine';
+import { applyPromptOverrides, applySystemPromptOverrides } from './promptOverrides';
 
 interface NarrativeTaskInput {
   character: Character;
@@ -8,6 +9,7 @@ interface NarrativeTaskInput {
   activeRules: RuleCard[];
   turnCount: number;
   maxTurns: number;
+  promptOverrides?: TaskPromptOverrides;
 }
 
 const NARRATIVE_SYSTEM_PROMPT = `
@@ -38,7 +40,7 @@ export async function runNarrativeTask(
   taskConfig: TaskAIConfig,
   input: NarrativeTaskInput
 ): Promise<NarrativeTaskOutput> {
-  const prompt = `
+  const basePrompt = `
 [角色]
 ${input.character.name}（${input.character.title}）
 弱点：${input.character.weakness}
@@ -59,6 +61,8 @@ ${input.choiceText}
 生成下一段剧情叙事，要求风格稳定、因果清晰、可直接显示到中间叙事面板。
 必须以“你”作为叙事主视角，让玩家体验该角色当下处境。
 `;
+  const prompt = applyPromptOverrides(basePrompt, input.promptOverrides);
+  const systemInstruction = applySystemPromptOverrides(NARRATIVE_SYSTEM_PROMPT, input.promptOverrides);
 
   const narrativeText = await executeWithRetry(
     () => generateContent(
@@ -69,7 +73,7 @@ ${input.choiceText}
       },
       {
         prompt,
-        systemInstruction: NARRATIVE_SYSTEM_PROMPT,
+        systemInstruction,
         jsonMode: false,
       },
       taskConfig

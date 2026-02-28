@@ -1,0 +1,145 @@
+{
+  "lock": {
+    "active": false,
+    "owner": "runner",
+    "started_at": "2026-02-19T07:01:35Z",
+    "expires_at": "2026-02-19T07:31:35Z"
+  },
+  "stage": {
+    "current": "P7",
+    "status": "stage_done"
+  },
+  "task": {
+    "current": "P7-release-archive",
+    "status": "done",
+    "started_at": "2026-02-18T21:01:41.470375Z",
+    "updated_at": "2026-02-19T06:53:47Z"
+  },
+  "done_tasks": [
+    {
+      "id": "P0-mapping-spec",
+      "name": "protocol alignment and field freeze",
+      "evidence": "/Users/dmeck/project/CharacterCard/docs/mapping-spec.v1.md and stage.md status updated to 已完成",
+      "finished_at": "2026-02-18T13:17:08.481712+00:00"
+    },
+    {
+      "id": "P1-collector-parser",
+      "name": "collector and parser alignment",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackConverter/collector.ts, parser/* exist; stage.md updated to P1 已完成",
+      "finished_at": "2026-02-18T16:51:06.903247Z"
+    },
+    {
+      "id": "P2-normalizer",
+      "name": "normalized engine pack model",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackConverter/normalizer.ts and stage.md updated to P2 已完成",
+      "finished_at": "2026-02-18T13:23:12.026563+00:00"
+    },
+    {
+      "id": "P3-deterministic-mapper",
+      "name": "deterministic mapper implementation",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackConverter/mapper/deterministicMapper.ts and stage.md updated to P3 已完成",
+      "finished_at": "2026-02-18T13:26:44+00:00"
+    },
+    {
+      "id": "P4-llm-protocol-mapper",
+      "name": "llm protocol mapper implementation",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackConverter/mapper/llmProtocolMapper.ts and stage.md updated to P4 已完成",
+      "finished_at": "2026-02-18T13:31:58.329109+00:00"
+    },
+    {
+      "id": "P5-validator-review-queue",
+      "name": "validator and review-queue implementation",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackConverter/validator.ts and stage.md updated to P5 已完成",
+      "finished_at": "2026-02-18T13:36:15.525404+00:00"
+    },
+    {
+      "id": "P6-runtime-integration",
+      "name": "runtime integration (dynamic rules + prompt overrides)",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackRuntime.ts and store/App integration, stage.md updated to P6 已完成",
+      "finished_at": "2026-02-18T14:40:18Z"
+    },
+    {
+      "id": "P7-tests-release",
+      "name": "testing and release readiness (build verification)",
+      "evidence": "npm run build succeeded (vite build) on 2026-02-18; stage.md updated to P7 已完成",
+      "finished_at": "2026-02-18T14:52:15Z"
+    },
+    {
+      "id": "P0-terminology-boundary-freeze",
+      "name": "terminology and boundary freeze",
+      "evidence": "/Users/dmeck/project/CharacterCard/docs/mapping-spec.v1.md and /Users/dmeck/project/CharacterCard/docs/task/task2.md boundary definitions; stage.md updated to P0 已完成",
+      "finished_at": "2026-02-18T16:48:50Z"
+    },
+    {
+      "id": "P2-protocol-pack-emitter",
+      "name": "protocol pack emission",
+      "evidence": "/Users/dmeck/project/CharacterCard/public/engine-pack/evaluation-pack.v1.json, review-queue.json, conversion-report.md generated; stage.md updated to P2 已完成",
+      "finished_at": "2026-02-18T17:06:08Z"
+    },
+    {
+      "id": "P2-protocol-pack-emitter",
+      "name": "protocol mapping and evaluation pack emission",
+      "evidence": "/Users/dmeck/project/CharacterCard/public/engine-pack/evaluation-pack.v1.json, review-queue.json, conversion-report.md (validation ok)",
+      "finished_at": "2026-02-18T17:07:07.385376Z"
+    },
+    {
+      "id": "P3-prompt-assets",
+      "name": "prompt assets normalization and override injection",
+      "evidence": "/Users/dmeck/project/CharacterCard/public/engine-pack/evaluation-pack.v1.json includes promptAssets; review-queue.json updated",
+      "finished_at": "2026-02-18T18:06:35Z"
+    },
+    {
+      "id": "P4-validator-review-rollback",
+      "name": "validator, review-queue, and rollback record",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackConverter/validator.ts; /Users/dmeck/project/CharacterCard/public/engine-pack/review-queue.json; /Users/dmeck/project/CharacterCard/docs/mapping-spec.v1.md#7",
+      "finished_at": "2026-02-18T19:01:38Z"
+    },
+    {
+      "id": "P5-runtime-consumption-boundary",
+      "name": "runtime consumption boundary integration",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackRuntime.ts, /Users/dmeck/project/CharacterCard/App.tsx, /Users/dmeck/project/CharacterCard/store/index.ts, /Users/dmeck/project/CharacterCard/services/turnOrchestrator.ts, stage.md updated to P5 已完成",
+      "finished_at": "2026-02-18T20:01:55Z"
+    },
+    {
+      "id": "P6-tests-basic",
+      "name": "basic vitest suite + integration test run",
+      "evidence": "npm test (vitest run) succeeded; docs/testing/dod-checklist.md updated",
+      "finished_at": "2026-02-19T05:21:00Z"
+    },
+    {
+      "id": "P6-golden-diff",
+      "name": "regression golden diff test",
+      "evidence": "/Users/dmeck/project/CharacterCard/tests/enginePackConverter/goldenDiff.test.ts (npm test pass)",
+      "finished_at": "2026-02-19T06:08:23Z"
+    },
+    {
+      "id": "P6-runtime-smoke",
+      "name": "runtime smoke test",
+      "evidence": "/Users/dmeck/project/CharacterCard/tests/enginePackRuntime/orchestratorSmoke.test.ts (npm test pass)",
+      "finished_at": "2026-02-19T06:08:23Z"
+    },
+    {
+      "id": "P6-trace-persistence",
+      "name": "trace map persistence + coverage test",
+      "evidence": "/Users/dmeck/project/CharacterCard/services/enginePackConverter/mapper/deterministicMapper.ts, /Users/dmeck/project/CharacterCard/services/enginePackConverter/validator.ts, /Users/dmeck/project/CharacterCard/tests/enginePackConverter/traceCoverage.test.ts",
+      "finished_at": "2026-02-19T06:49:07Z"
+    },
+    {
+      "id": "P7-release-archive",
+      "name": "release report and stage archive",
+      "evidence": "/Users/dmeck/project/CharacterCard/docs/stage/stage-report-2026-02-19.md and /Users/dmeck/project/CharacterCard/docs/stage/stage.completed.backup.md; stage.md updated to P7 已完成",
+      "finished_at": "2026-02-19T06:53:47Z"
+    }
+  ],
+  "todo": [],
+  "status": "stage_done",
+  "last_run": {
+    "time": "2026-02-19T07:01:35Z",
+    "summary": "Checked stage.md; all phases P0-P7 already completed, no next stage to run"
+  },
+  "blocked": {
+    "reason": "",
+    "detail": "",
+    "next_actions": []
+  }
+}

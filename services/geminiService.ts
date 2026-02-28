@@ -1,6 +1,7 @@
 import { Type } from "@google/genai";
-import { Character, RuleCard, EngineResult, TriggeredRule } from "../types";
+import { Character, RuleCard, EngineResult, TriggeredRule, TaskPromptOverrides } from "../types";
 import { generateContent, AIProviderConfig } from "./aiEngine";
+import { applyPromptOverrides, applySystemPromptOverrides } from "./promptOverrides";
 
 const SYSTEM_PROMPT = `
 You are the **Core Logic Engine** and **Narrative Director** for "Chronicles of the Persona".
@@ -95,12 +96,13 @@ export const processTurn = async (
   historySummary: string,
   turnCount: number,
   maxTurns: number,
-  providerConfig?: AIProviderConfig
+  providerConfig?: AIProviderConfig,
+  promptOverrides?: TaskPromptOverrides
 ): Promise<EngineResult> => {
   
   const isFinalTurn = turnCount >= maxTurns;
 
-  const prompt = `
+  const basePrompt = `
     [GAME STATE]
     Turn: ${turnCount} / ${maxTurns}
     Character: ${character.name} (${character.title}) - Weakness: ${character.weakness}
@@ -120,6 +122,8 @@ export const processTurn = async (
     4. **Rule Evolution**: If the story shifts significantly, you may Add a Rule (e.g., "Injury") or Remove one.
     5. ${isFinalTurn ? "This is the CLIMAX. Ignore choices generation. Set 'isGameOver': true and provide a 'gameSummary'." : "Generate 3 distinct choices for the next step."}
   `;
+  const prompt = applyPromptOverrides(basePrompt, promptOverrides);
+  const systemInstruction = applySystemPromptOverrides(SYSTEM_PROMPT, promptOverrides);
 
   const config: AIProviderConfig = providerConfig || {
     provider: 'gemini',
@@ -131,7 +135,7 @@ export const processTurn = async (
   try {
     const response = await generateContent(config, {
       prompt,
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction,
       jsonSchema: responseSchema,
       jsonMode: true
     });

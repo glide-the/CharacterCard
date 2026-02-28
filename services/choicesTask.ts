@@ -1,10 +1,12 @@
 import { Type } from '@google/genai';
-import { AIConfig, ChoicesTaskOutput, TaskAIConfig } from '../types';
+import { AIConfig, ChoicesTaskOutput, TaskAIConfig, TaskPromptOverrides } from '../types';
 import { executeWithRetry, generateContent } from './aiEngine';
+import { applyPromptOverrides, applySystemPromptOverrides } from './promptOverrides';
 
 interface ChoicesTaskInput {
   narrativeText: string;
   historySummary: string;
+  promptOverrides?: TaskPromptOverrides;
 }
 
 const schema = {
@@ -50,7 +52,7 @@ export async function runChoicesTask(
   taskConfig: TaskAIConfig,
   input: ChoicesTaskInput
 ): Promise<ChoicesTaskOutput> {
-  const prompt = `
+  const basePrompt = `
 [叙事文本]
 ${input.narrativeText}
 
@@ -61,13 +63,15 @@ ${input.historySummary}
 生成 3 个可执行且彼此差异化的后续选项。
 务必包含一个“按兵不动”策略选项。
 `;
+  const prompt = applyPromptOverrides(basePrompt, input.promptOverrides);
+  const systemInstruction = applySystemPromptOverrides(CHOICES_SYSTEM_PROMPT, input.promptOverrides);
 
   const response = await executeWithRetry(
     () => generateContent(
       { provider: provider.provider, gemini: provider.gemini, openai: provider.openai },
       {
         prompt,
-        systemInstruction: CHOICES_SYSTEM_PROMPT,
+        systemInstruction,
         jsonSchema: schema,
         jsonMode: true,
       },

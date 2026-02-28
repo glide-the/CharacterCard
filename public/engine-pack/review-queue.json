@@ -1,0 +1,44 @@
+[
+  {
+    "id": "chart-1",
+    "reason": "resource missing",
+    "detail": "/Users/dmeck/project/CharacterCard/docs/game-engine-package/files/charts/state_flow.png",
+    "severity": "medium"
+  },
+  {
+    "id": "chart-2",
+    "reason": "resource missing",
+    "detail": "/Users/dmeck/project/CharacterCard/docs/game-engine-package/files/charts/task_dag.png",
+    "severity": "medium"
+  },
+  {
+    "id": "chart-3",
+    "reason": "resource missing",
+    "detail": "/Users/dmeck/project/CharacterCard/docs/game-engine-package/files/charts/symbol_distribution.png",
+    "severity": "medium"
+  },
+  {
+    "id": "log-4",
+    "reason": "resource missing",
+    "detail": "/Users/dmeck/project/CharacterCard/docs/game-engine-package/files/logs/execution_20260218.log",
+    "severity": "medium"
+  },
+  {
+    "id": "log-5",
+    "reason": "resource missing",
+    "detail": "/Users/dmeck/project/CharacterCard/docs/game-engine-package/files/logs/rule_engine_pseudo.txt",
+    "severity": "medium"
+  },
+  {
+    "id": "data-6",
+    "reason": "resource missing",
+    "detail": "/Users/dmeck/project/CharacterCard/docs/game-engine-package/files/data/symbol_engine_20260218_v2.0.json",
+    "severity": "medium"
+  },
+  {
+    "id": "data-7",
+    "reason": "resource missing",
+    "detail": "/Users/dmeck/project/CharacterCard/docs/game-engine-package/files/data/data_summary.md",
+    "severity": "medium"
+  }
+]

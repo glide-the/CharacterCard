@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "./dist",
+    "rootDir": "../",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "declaration": false,
+    "noEmitOnError": true
+  },
+  "include": [
+    "../services/enginePackConverter/**/*.ts",
+    "../services/aiEngine.ts",
+    "../types.ts"
+  ]
+}

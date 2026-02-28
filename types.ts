@@ -1,6 +1,7 @@
 
 export enum Phase {
   SELECTION = 'SELECTION',
+  DESIGN_CONFIG = 'DESIGN_CONFIG',
   LOADING = 'LOADING',
   GAMEPLAY = 'GAMEPLAY',
   DECISION_MAP = 'DECISION_MAP',
@@ -144,6 +145,14 @@ export interface AIConfig {
 }
 
 export type TaskName = 'narrative' | 'realityMapping' | 'worldRules' | 'choices';
+
+export interface TaskPromptOverrides {
+  systemPrompt?: string;
+  promptPrefix?: string;
+  promptSuffix?: string;
+}
+
+export type TaskPromptOverrideMap = Partial<Record<TaskName, TaskPromptOverrides>>;
 
 export interface TaskAIConfig {
   geminiModel?: string;

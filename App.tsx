@@ -5,9 +5,11 @@ import CharacterCard from './components/CharacterCard';
 import RuleCardComponent from './components/RuleCard';
 import { AiSettingsModal } from './components/AiSettingsModal';
 import DecisionFlowPage from './components/DecisionFlowPage';
+import DesignRequirementsConfigPage from './components/DesignRequirementsConfigPage';
 import TurnCompleteToast from './components/TurnCompleteToast';
 import RealityMappingPanel from './components/RealityMappingPanel';
 import { orchestrateTurn } from './services/turnOrchestrator';
+import { loadEnginePackFromUrl, resolveEnginePackUrl } from './services/enginePackRuntime';
 import { parseRuleMappings } from './utils/ruleParser';
 import { mergeTriggeredRules } from './utils/ruleValidator';
 import {
@@ -50,6 +52,10 @@ import {
   useSetWorldRulesLoading,
   useSetChoicesLoading,
   useSetTaskConfigScopeId,
+  useEnginePack,
+  useSetEnginePack,
+  useSetEnginePackStatus,
+  useSetEnginePackError,
 } from './store';
 
 const App: React.FC = () => {
@@ -72,6 +78,7 @@ const App: React.FC = () => {
   const openaiConfig = useOpenaiConfig();
   const setShowAiSettings = useSetShowAiSettings();
   const taskConfigs = useTaskConfigs();
+  const enginePack = useEnginePack();
   const realityAnalysis = useRealityAnalysis();
   const realityAnalysisLoading = useRealityAnalysisLoading();
   const ruleStatusMap = useRuleStatusMap();
@@ -95,6 +102,9 @@ const App: React.FC = () => {
   const setWorldRulesLoading = useSetWorldRulesLoading();
   const setChoicesLoading = useSetChoicesLoading();
   const setTaskConfigScopeId = useSetTaskConfigScopeId();
+  const setEnginePack = useSetEnginePack();
+  const setEnginePackStatus = useSetEnginePackStatus();
+  const setEnginePackError = useSetEnginePackError();
   const resetGame = useResetGame();
   const startNewGame = useStartNewGame();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -117,6 +127,27 @@ const App: React.FC = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [storyLog, currentStory, loading]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const sourceUrl = resolveEnginePackUrl();
+    if (!sourceUrl) return;
+
+    setEnginePackStatus('loading');
+    loadEnginePackFromUrl(sourceUrl)
+      .then((payload) => {
+        if (cancelled) return;
+        setEnginePack(payload);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setEnginePackError(error instanceof Error ? error.message : String(error));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [setEnginePack, setEnginePackError, setEnginePackStatus]);
 
   useEffect(() => {
     if (currentTriggeredRules.length > 0) {
@@ -163,7 +194,8 @@ const App: React.FC = () => {
         historySummary,
         turnCount,
         maxTurns,
-        config: { provider: providerConfig, tasks: taskConfigs }
+        config: { provider: providerConfig, tasks: taskConfigs },
+        promptOverrides: enginePack?.promptOverrides,
       });
       result = orchestratorResult.engineResult;
 
@@ -317,6 +349,13 @@ const App: React.FC = () => {
                  <i className="fa-solid fa-scroll"></i>
               </span>
               <div className="absolute inset-0 bg-gold transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 opacity-20"></div>
+            </button>
+            <button
+              onClick={() => setPhase(Phase.DESIGN_CONFIG)}
+              className="px-6 py-2 text-sm font-display tracking-[0.2em] uppercase border border-gold/70 text-gold bg-black/40 hover:bg-gold/10 transition-colors rounded-lg"
+            >
+              <i className="fa-solid fa-upload mr-2"></i>
+              引擎配置
             </button>
         </div>
 
@@ -618,6 +657,7 @@ const App: React.FC = () => {
   return (
     <>
       {phase === Phase.SELECTION && renderSelection()}
+      {phase === Phase.DESIGN_CONFIG && <DesignRequirementsConfigPage />}
       {phase === Phase.GAMEPLAY && renderGameplay()}
       {phase === Phase.DECISION_MAP && <DecisionFlowPage />}
       {phase === Phase.GAME_OVER && renderGameOver()}
